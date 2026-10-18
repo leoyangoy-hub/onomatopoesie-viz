@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可视化 08 · 教学启示 · 方法×理论矩阵 — 拟声词 Onomatopoesie</title>
+<style>
+:root{
+  --ink:#141413; --canvas:#f0eee6; --card:#faf9f5; --cloud:#b0aea5; --cloud-d:#87867f;
+  --stone:#cccbc8; --oat:#e3dacc; --manilla:#f5e3c7; --clay:#c6613f; --clay-2:#d97757;
+  --serif:Georgia,"Times New Roman","Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SF Mono",Consolas,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--serif);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(240,238,230,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--stone)}
+.topnav .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:14px;padding-top:6px;padding-bottom:6px;flex-wrap:wrap}
+.brand{font-family:var(--sans);font-size:11px;letter-spacing:.14em;color:var(--cloud-d);font-weight:600;text-transform:uppercase}
+.brand b{color:var(--clay);font-weight:700}
+.links{display:flex;gap:3px;flex-wrap:wrap}
+.links a{font-family:var(--sans);font-size:11px;color:var(--cloud-d);text-decoration:none;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.links a:hover{color:var(--ink);background:var(--oat)}
+.links a.on{background:var(--ink);color:var(--card)}
+.hero{padding:58px 0 30px;border-bottom:1px solid var(--stone)}
+.kicker{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--clay)}
+.hero h1{font-size:46px;font-weight:400;line-height:1.12;margin:16px 0 6px}
+.hero h1 .de{display:block;font-size:22px;color:var(--cloud-d);margin-top:8px;font-weight:400}
+.lead{font-size:16px;max-width:80ch;margin-top:16px}
+.lead em{font-style:normal;color:var(--clay);font-weight:600}
+section{padding:34px 0 6px}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:18px;border-bottom:1px solid var(--stone);padding-bottom:10px}
+.sec-num{font-size:26px;color:var(--cloud)}
+.sec-title{font-size:22px;font-weight:700}
+.sec-title .de{font-family:var(--sans);font-size:12px;color:var(--cloud-d);font-weight:500;margin-left:10px;letter-spacing:.06em}
+.card{background:var(--card);border:1px solid var(--stone);border-radius:16px;padding:24px 26px}
+h3.ct{font-size:17px;font-weight:700}
+h3.ct .de{font-family:var(--sans);font-size:11.5px;color:var(--cloud-d);font-weight:500;margin-left:8px;font-style:italic}
+.card p{font-size:13.5px;margin-top:10px}
+/* ---------- matrix ---------- */
+.matrix{display:grid;grid-template-columns:200px 1fr 1fr 1fr;gap:10px;align-items:stretch}
+@media(max-width:900px){.matrix{grid-template-columns:1fr 1fr;}.mh{display:none}.mc{grid-column:span 1}}
+.mh{display:flex;align-items:center;justify-content:center;background:var(--ink);color:var(--card);border-radius:12px;
+  font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:.08em;text-align:center;padding:12px 8px;line-height:1.4}
+.mh small{display:block;font-size:8.5px;color:var(--cloud);font-weight:600;margin-top:3px;letter-spacing:.12em}
+.mrow{display:flex;flex-direction:column;justify-content:center;background:var(--manilla);border-radius:12px;padding:12px 16px}
+.mrow .no{font-family:var(--sans);font-size:9px;letter-spacing:.14em;color:var(--clay);font-weight:700}
+.mrow .t{font-size:14.5px;font-weight:700;margin:2px 0}
+.mrow .de{font-family:var(--sans);font-size:9.5px;color:var(--cloud-d);font-style:italic}
+.mc{background:var(--card);border:1px solid var(--stone);border-radius:12px;padding:12px 14px;cursor:pointer;transition:all .25s;position:relative}
+.mc:hover{border-color:var(--clay);transform:translateY(-2px)}
+.mc.sel{background:var(--manilla);border-color:var(--clay);box-shadow:0 4px 14px rgba(198,97,63,.18)}
+.mc .ct2{font-size:12.5px;font-weight:700}
+.mc .cd{font-family:var(--sans);font-size:10.5px;color:var(--cloud-d);margin-top:4px;line-height:1.45}
+.mc .open{position:absolute;top:8px;right:10px;font-family:var(--sans);font-size:9px;color:var(--clay);font-weight:700;opacity:0;transition:opacity .2s}
+.mc:hover .open,.mc.sel .open{opacity:1}
+/* ---------- detail ---------- */
+.detail{margin-top:16px;background:var(--card);border:1px solid var(--stone);border-radius:16px;padding:22px 26px;display:none}
+.detail.on{display:block;animation:pin .35s cubic-bezier(.2,.7,.2,1)}
+@keyframes pin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.detail .dt{font-size:18px;font-weight:700}
+.detail .dt .de{font-family:var(--sans);font-size:11.5px;color:var(--clay);font-weight:600;margin-left:10px;font-style:italic}
+.detail .dl{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:14px}
+@media(max-width:860px){.detail .dl{grid-template-columns:1fr}}
+.detail .dk{font-family:var(--sans);font-size:9.5px;letter-spacing:.12em;color:var(--cloud-d);font-weight:700;margin-bottom:6px}
+.detail p{font-size:13px;line-height:1.65}
+.detail .bsp{background:var(--oat);border-radius:10px;padding:10px 14px;font-size:13px;font-style:italic;margin-top:6px}
+.detail .bsp small{display:block;font-family:var(--sans);font-style:normal;font-size:11px;color:var(--cloud-d);margin-top:3px}
+/* ---------- register warning ---------- */
+.reg{background:var(--ink);color:var(--card);border-radius:16px;padding:26px 30px}
+.reg .tag{font-family:var(--sans);font-size:10px;letter-spacing:.16em;color:var(--clay-2);font-weight:700;display:block;margin-bottom:12px}
+.reg h3{font-size:19px;font-weight:700;color:var(--manilla);margin-bottom:14px}
+.reg .pair{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:860px){.reg .pair{grid-template-columns:1fr}}
+.reg .it{background:rgba(250,249,245,.07);border-radius:12px;padding:14px 18px}
+.reg .it .w{font-size:16px;font-weight:700;font-style:italic;color:var(--manilla)}
+.reg .it .r{font-family:var(--sans);font-size:10px;color:var(--clay-2);font-weight:700;letter-spacing:.1em;margin:3px 0 6px}
+.reg .it .d{font-size:12px;color:var(--cloud);line-height:1.6}
+.reg .foot{margin-top:16px;font-size:12.5px;color:var(--stone);border-top:1px solid rgba(250,249,245,.15);padding-top:12px}
+.reg .foot b{color:var(--clay-2)}
+/* ---------- note & footer ---------- */
+.note{margin:26px 0 8px;background:var(--manilla);border-radius:14px;padding:18px 22px}
+.note .tag{font-family:var(--sans);font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:700;display:block;margin-bottom:8px}
+.note p{font-size:13.5px;line-height:1.7}
+footer{border-top:1px solid var(--stone);margin-top:48px;padding:26px 0 44px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:10.5px;color:var(--cloud-d);letter-spacing:.08em}
+footer a{color:var(--clay);text-decoration:none}
+.fade{opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+.fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wrap">
+    <div class="brand">Onomatopoesie · Visualisierung <b>08 / 08</b></div>
+    <div class="links">
+      <a href="viz00_index.html">索引</a>
+      <a href="viz01_bouba-kiki.html">01 象似性</a>
+      <a href="viz02_crossmodal.html">02 跨模态</a>
+      <a href="viz03_artikulation.html">03 具身发音</a>
+      <a href="viz04_mentales-lexikon.html">04 心理词典</a>
+      <a href="viz05_reifikation.html">05 物化</a>
+      <a href="viz06_metapher.html">06 隐喻</a>
+      <a href="viz07_interjektion.html">07 感叹词习得</a>
+      <a class="on" href="viz08_didaktik.html">08 教学</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Visualisierung 08 · Didaktische Implikationen · 教学启示</div>
+    <h1>把理论搬回课堂
+      <span class="de">3 种方法 × 3 个理论支点 —— 点击矩阵格，查看教学设计</span>
+    </h1>
+    <p class="lead">理论只有落到课堂才算完成。横向三种教学法（对比法 · 身体记忆法 · 语境造句），纵向三个理论支点（心理词典与负迁移 · 具身认知 · 脚本理论）——<em>点击任意格子</em>，展开对应的教学设计卡。</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ A. 矩阵 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">A</div><div class="sec-title">方法 × 理论 · 3×3 教学矩阵<span class="de">METHODEN × THEORIEN · MATRIX</span></div></div>
+  <div class="matrix" id="mx">
+    <div class="mh" style="background:transparent;color:var(--cloud-d)">方法 ↓ ｜ 理论 →</div>
+    <div class="mh">心理词典 · 负迁移<small>MENTALES LEXIKON</small></div>
+    <div class="mh">具身认知<small>EMBODIMENT</small></div>
+    <div class="mh">脚本理论<small>SKRIPT-THEORIE · SCHANK &amp; ABELSON 1977</small></div>
+
+    <div class="mrow"><span class="no">01</span><span class="t">对比法</span><span class="de">Kontrastive Methode</span></div>
+    <div class="mc" data-c="a1"><span class="open">＋ 展开</span><div class="ct2">叫声对比 · 语音修剪</div><div class="cd">模仿德国人叫狗 „wau wau“，对比中文「汪汪」</div></div>
+    <div class="mc" data-c="a2"><span class="open">＋ 展开</span><div class="ct2">口腔对比 · 发音体感</div><div class="cd">对比发 /ts/ 与中文「嘶」的口腔动作差异</div></div>
+    <div class="mc" data-c="a3"><span class="open">＋ 展开</span><div class="ct2">场景对比 · 脚本差异</div><div class="cd">对比汉德「清晨场景」中叫声词的不同出场顺序</div></div>
+
+    <div class="mrow"><span class="no">02</span><span class="t">身体记忆法</span><span class="de">Handlungsorientierter Unterricht</span></div>
+    <div class="mc" data-c="b1"><span class="open">＋ 展开</span><div class="ct2">动作建档 · 词挂身体</div><div class="cd">每个拟声动词配一个标志性动作，挂入心理词典</div></div>
+    <div class="mc" data-c="b2"><span class="open">＋ 展开</span><div class="ct2">TPR 全身反应</div><div class="cd">讲 kichern 时让全班真的「憋笑」——身体记住词</div></div>
+    <div class="mc" data-c="b3"><span class="open">＋ 展开</span><div class="ct2">动作脚本 · 程序记忆</div><div class="cd">把「听声→做动作→说词」连成自动化脚本</div></div>
+
+    <div class="mrow"><span class="no">03</span><span class="t">语境造句</span><span class="de">Szenario-Methode</span></div>
+    <div class="mc" data-c="c1"><span class="open">＋ 展开</span><div class="ct2">语块造句 · 网络归位</div><div class="cd">用整块语块造句，避免中文网络中转</div></div>
+    <div class="mc" data-c="c2"><span class="open">＋ 展开</span><div class="ct2">情境表演 · 体感复现</div><div class="cd">表演句子情境，让身体再经历一次声音事件</div></div>
+    <div class="mc" data-c="c3"><span class="open">＋ 展开</span><div class="ct2">剧本写作 · 办公室一天</div><div class="cd">用 brüllen · murren · flüstern 编「办公室的一天」</div></div>
+  </div>
+
+  <div class="detail" id="detail">
+    <div class="dt" id="dt"></div>
+    <div class="dl">
+      <div><div class="dk">DESIGN · 教学设计</div><p id="dd1"></p></div>
+      <div><div class="dk">THEORIE · 理论依据</div><p id="dd2"></p><div class="bsp" id="dbsp"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ B. 语域警示 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">B</div><div class="sec-title">语域警示：拟声动词不是万能的<span class="de">REGISTER-WARNUNG · NICHT ÜBERSTRAPAZIEREN</span></div></div>
+  <div class="reg">
+    <span class="tag">⚠ REGISTER · 语域</span>
+    <h3>拟声动词固化在特定的心理词典网络中——滥用会激活错误的语义网络</h3>
+    <div class="pair">
+      <div class="it">
+        <div class="w">brüllen</div>
+        <div class="r">语境：愤怒 · 命令</div>
+        <div class="d">用于暴怒、命令、失控的喊叫。课堂造句 „Der Lehrer brüllt das Gedicht“ 是不得体的——它激活的是攻击性网络，不是朗读网络。</div>
+      </div>
+      <div class="it">
+        <div class="w">flüstern</div>
+        <div class="r">语境：秘密 · 暧昧</div>
+        <div class="d">用于秘密、亲密、不欲人知。请求别人重复问题时说 „Flüstern Sie bitte!“ 会造成交际误解——语域错了，词再对也错。</div>
+      </div>
+    </div>
+    <div class="foot">教材警示：<b>nicht überstrapazieren（不可滥用）</b>——每个拟声动词都携带着它的语域基因，教学必须连语域一起教。</div>
+  </div>
+</section>
+
+<!-- ============ 讲者提示 ============ -->
+<div class="note">
+  <span class="tag">SPRECHNOTIZ · 讲者提示（对应汇报 9:00–9:40 · 第 10 页幻灯）</span>
+  <p>教学启示有三。其一，对比法（kontrastive Methode）：模仿德国人叫狗 „wau wau“，对比中文「汪汪」，体会各自的语音修剪。其二，身体记忆法（handlungsorientierter Unterricht）：讲 kichern 时让大家真的憋笑——这正是 TPR 全身反应法的具身依据。其三，语境造句（Szenario-Methode）：用 brüllen、murren、flüstern 编「办公室的一天」，背后是 Schank &amp; Abelson (1977) 的脚本理论（Skript-Theorie）。最后强调语域：brüllen 用于愤怒与命令，flüstern 用于秘密与暧昧，拟声动词固化在特定心理词典网络，滥用会激活错误语义网络——nicht überstrapazieren！</p>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>拟声词 · ONOMATOPOESIE —— 破译大脑的声音密码 ｜ 《现代德语词汇学》第五章第一节 · 学术课题小汇报</span>
+    <span><a href="viz07_interjektion.html">← 07 感叹词习得</a> ｜ <a href="viz00_index.html">索引</a> ｜ 回到：<a href="viz01_bouba-kiki.html">01 象似性 ↺</a></span>
+  </div>
+</footer>
+
+<script>
+const D={
+a1:{t:"对比法 × 心理词典：叫声对比 · 语音修剪",de:"KONTRASTIV × MENTALES LEXIKON",
+ d1:"课堂操作：教师先播放德语 „wau wau“ 与中文「汪汪」，学生跟读对比，划出两种语言各自「修剪」了声音事件的哪些频段（德语 /v/-/aʊ/ 的起承 vs 汉语 /w/-/aŋ/ 的鼻化收尾）。随后整体记忆语块 „der Hund bellt ‚wau wau‘“，不经中文翻译中转。",
+ d2:"心理词典中的词嵌入语义网络（Aitchison 2003）。用中文「汪汪」套德语狗叫会激活错误的语义网络（Negativtransfer 负迁移）；把语块作为 Chunk 整体存入，才能让新词挂进德语网络的正确节点——双语者之间的认知契约（Kognitive Konvention）。",
+ b:"Der Hund bellt „wau wau“. — 狗汪汪叫。（整块记忆，不拆译）"},
+a2:{t:"对比法 × 具身认知：口腔对比 · 发音体感",de:"KONTRASTIV × EMBODIMENT",
+ d1:"课堂操作：学生轮流发德语 /ts/（如 zischen）与中文「嘶」，用手指感受舌尖位置与气流出口的差别，说出身体感受的不同。让「对比」不止停留在耳朵，而是落实到口腔肌肉的记忆里。",
+ d2:"具身认知认为概念理解部分重演感知运动模拟（Barsalou 2008；Lakoff & Johnson 1999）。发音器官的动作是具身模拟的外在证据——两种语言对同一声音的「修剪」差异，本质是两组不同的身体模拟方案。",
+ b:"/ts/：舌尖抵齿龈除阻成缝；「嘶」：舌尖后缩——同一个声音，两种身体。"},
+a3:{t:"对比法 × 脚本理论：场景对比 · 脚本差异",de:"KONTRASTIV × SKRIPT-THEORIE",
+ d1:"课堂操作：给出「清晨农庄」场景，学生分别用汉语和德语排出事件脚本（公鸡叫→起床→……），发现德语脚本中 „Der Hahn kräht ‚kikeriki‘“ 是固定开场，而叫声词的位置、搭配在两套脚本中并不对等。",
+ d2:"Schank & Abelson (1977) 的脚本理论：事件知识以「脚本」形式组织。拟声词在每种语言的脚本中有固定的槽位（slot）与出场顺序——二语习得的一部分，就是重写脑内脚本的台词。",
+ b:"DE: Der Hahn kräht „kikeriki“, der Wecker klingelt. ／ ZH: 公鸡「喔喔」叫，闹钟响了。"},
+b1:{t:"身体记忆法 × 心理词典：动作建档 · 词挂身体",de:"HANDLUNGSORIENTIERT × MENTALES LEXIKON",
+ d1:"课堂操作：为每个拟声动词约定一个标志性动作——bellen 双手作喇叭状、flüstern 捂嘴侧身、kichern 捂嘴抖肩。教词时词与动作同时呈现，复习时看到动作说词，让词条在心理词典中多一条「运动通道」。",
+ d2:"心理词典的每个词条捆绑语音、语义、句法等多维信息（Aitchison 2003）。为词条追加「动作印记」，等于给提取路径修了一条备用车道——多模态编码的词条，提取更稳、更快。",
+ b:"看到捂嘴抖肩 → kichern；看到捂嘴侧身 → flüstern。（动作即检索键）"},
+b2:{t:"身体记忆法 × 具身认知：TPR 全身反应",de:"HANDLUNGSORIENTIERT × EMBODIMENT · TPR",
+ d1:"课堂操作：讲 kichern 时，让全班真的憋笑十秒——肩膀发抖、嘴角失守；讲 brummen 时手放胸口发低频「嗯——」。词讲完，身体已经记住了。这就是 TPR（Total Physical Response 全身反应法）在拟声词课堂的直接应用。",
+ d2:"具身认知：理解一个拟声词，就是身体在重演那个声音事件（Barsalou 2008）。憋笑时失控的肩抖，就是 kichern 一词的意义内核——先让身体「懂」，再让词典定义来追认。",
+ b:"kichern = 憋不住的笑。你的身体刚才已经「说」过这个词了。"},
+b3:{t:"身体记忆法 × 脚本理论：动作脚本 · 程序记忆",de:"HANDLUNGSORIENTIERT × SKRIPT-THEORIE",
+ d1:"课堂操作：把「听声 → 做动作 → 说词」练成三连自动化脚本：教师播放狗叫录音，学生先做喇叭手动作，再说 „Der Hund bellt“。反复三轮，把感知—动作—语言焊成一条流水线。",
+ d2:"脚本理论中的「程序化知识」经反复演练转为自动化处理（Schank & Abelson 1977）。当听声—动作—说词成为一条无意识的执行脚本，提取拟声词就不再需要经过意识翻译。",
+ b:"Hören → Handeln → Sprechen：三轮之后，脚本自动运行。"},
+c1:{t:"语境造句 × 心理词典：语块造句 · 网络归位",de:"SZENARIO × MENTALES LEXIKON",
+ d1:"课堂操作：不给孤立的词，给整块语块——„Der Motor brummt.“, „Sie flüstert ihm etwas ins Ohr.“ 学生用语块整体造新句，替换的只有语境成分（谁、在哪、为什么），语块本身不许拆译。",
+ d2:"负迁移的根源是经由中文网络中转（Negativtransfer）。语块造句强制学生直接在德语网络内部操作，新句的每一次产出都是德语语义网络的一次加固（Aitchison 2003）。",
+ b:"语块：„Der Motor brummt.“ → 造句：„Der alte Kühlschrank brummt die ganze Nacht.“"},
+c2:{t:"语境造句 × 具身认知：情境表演 · 体感复现",de:"SZENARIO × EMBODIMENT",
+ d1:"课堂操作：造句不止于纸面——每组学生把所造句子演出来：压低的嗓音、弓起的背、张望的眼神。观众猜句子。身体把句子的情境再经历一遍，句子就不再只是字符串。",
+ d2:"理解句子同样依赖感知运动模拟（Barsalou 2008）。表演让造句者与被理解者都调用身体经验——句子意义的理解深度，取决于身体复现的程度。",
+ b:"演 „Sie flüstert ihm etwas ins Ohr“：音量、距离、眼神，一个都不能少。"},
+c3:{t:"语境造句 × 脚本理论：剧本写作 · 办公室的一天",de:"SZENARIO × SKRIPT-THEORIE",
+ d1:"课堂操作：小组任务——用 brüllen（老板发火）、murren（同事抱怨）、flüstern（茶水间密语）编写并表演小剧本「办公室的一天」。要求：每个动词至少出现一次，且语域得体。",
+ d2:"脚本理论：日常场景以脚本组织（Schank & Abelson 1977）。「办公室的一天」正是把三个拟声动词嵌入各自正确的脚本槽位——谁对谁说、在什么场合、带什么情绪，语域即脚本约束。",
+ b:"„Der Chef brüllt im Meeting, die Kollegen murren am Drucker, und in der Teeküche wird geflüstert.“"}
+};
+const detail=document.getElementById('detail');
+document.querySelectorAll('.mc').forEach(c=>{
+  c.addEventListener('click',()=>{
+    const k=c.dataset.c,d=D[k];if(!d)return;
+    document.querySelectorAll('.mc').forEach(x=>x.classList.toggle('sel',x===c));
+    document.getElementById('dt').innerHTML=d.t+'<span class="de">'+d.de+'</span>';
+    document.getElementById('dd1').textContent=d.d1;
+    document.getElementById('dd2').textContent=d.d2;
+    document.getElementById('dbsp').innerHTML=d.b+'<small>课堂示例 · Beispiel</small>';
+    detail.classList.add('on');
+    detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+});
+/* fade-in */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('section,.note').forEach(el=>{el.classList.add('fade');io.observe(el);});
+</script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可视化 02 · 跨模态感知 — 拟声词 Onomatopoesie</title>
+<style>
+:root{
+  --ink:#141413; --canvas:#f0eee6; --card:#faf9f5; --cloud:#b0aea5; --cloud-d:#87867f;
+  --stone:#cccbc8; --oat:#e3dacc; --manilla:#f5e3c7; --clay:#c6613f; --clay-2:#d97757;
+  --olive:#6f7d4f; --slate:#56717e;
+  --serif:Georgia,"Times New Roman","Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SF Mono",Consolas,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--serif);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(240,238,230,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--stone)}
+.topnav .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:14px;padding-top:6px;padding-bottom:6px;flex-wrap:wrap}
+.brand{font-family:var(--sans);font-size:11px;letter-spacing:.14em;color:var(--cloud-d);font-weight:600;text-transform:uppercase}
+.brand b{color:var(--clay);font-weight:700}
+.links{display:flex;gap:3px;flex-wrap:wrap}
+.links a{font-family:var(--sans);font-size:11px;color:var(--cloud-d);text-decoration:none;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.links a:hover{color:var(--ink);background:var(--oat)}
+.links a.on{background:var(--ink);color:var(--card)}
+.hero{padding:58px 0 30px;border-bottom:1px solid var(--stone)}
+.kicker{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--clay)}
+.hero h1{font-size:46px;font-weight:400;line-height:1.12;margin:16px 0 6px}
+.hero h1 .de{display:block;font-size:22px;color:var(--cloud-d);margin-top:8px;font-weight:400}
+.lead{font-size:16px;max-width:80ch;margin-top:16px}
+.lead em{font-style:normal;color:var(--clay);font-weight:600}
+section{padding:34px 0 6px}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:18px;border-bottom:1px solid var(--stone);padding-bottom:10px}
+.sec-num{font-size:26px;color:var(--cloud)}
+.sec-title{font-size:22px;font-weight:700}
+.sec-title .de{font-family:var(--sans);font-size:12px;color:var(--cloud-d);font-weight:500;margin-left:10px;letter-spacing:.06em}
+.card{background:var(--card);border:1px solid var(--stone);border-radius:16px;padding:24px 26px}
+h3.ct{font-size:17px;font-weight:700}
+h3.ct .de{font-family:var(--sans);font-size:11.5px;color:var(--cloud-d);font-weight:500;margin-left:8px;font-style:italic}
+.card p{font-size:13.5px;margin-top:10px}
+.ph{font-family:var(--mono);color:var(--clay);font-weight:700}
+/* ---------- word picker ---------- */
+.src-group{margin-bottom:18px}
+.src-group:last-child{margin-bottom:0}
+.src-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.src-dot{width:11px;height:11px;border-radius:50%}
+.src-name{font-size:15px;font-weight:700}
+.src-de{font-family:var(--sans);font-size:10.5px;color:var(--cloud-d);letter-spacing:.08em}
+.wordrow{display:flex;gap:10px;flex-wrap:wrap}
+.wbtn{font-family:var(--serif);font-style:italic;font-size:16px;border:1px solid var(--stone);background:var(--card);
+  border-radius:12px;padding:9px 18px;cursor:pointer;transition:all .22s;color:var(--ink)}
+.wbtn small{display:block;font-family:var(--sans);font-style:normal;font-size:10px;color:var(--cloud-d);margin-top:1px}
+.wbtn:hover{border-color:var(--ink);transform:translateY(-1px)}
+.wbtn.sel{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.wbtn.sel small{color:var(--cloud)}
+/* ---------- senses ---------- */
+.sense-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:20px}
+@media(max-width:940px){.sense-grid{grid-template-columns:1fr}}
+.srow{display:grid;grid-template-columns:34px 92px 1fr 44px;align-items:center;gap:12px;padding:11px 0;border-bottom:1px dashed var(--stone)}
+.srow:last-child{border-bottom:none}
+.srow svg{width:30px;height:30px}
+.sname{font-size:13.5px;font-weight:700}
+.sname .de{display:block;font-family:var(--sans);font-size:9.5px;color:var(--cloud-d);font-weight:500;letter-spacing:.06em}
+.sbar{height:11px;background:var(--oat);border-radius:999px;overflow:hidden}
+.sbar i{display:block;height:100%;width:0;border-radius:999px;transition:width .8s cubic-bezier(.2,.7,.2,1)}
+.sval{font-family:var(--sans);font-size:11px;color:var(--cloud-d);text-align:right}
+.sval b{color:var(--ink)}
+/* ---------- brain ---------- */
+.brainbox svg{width:100%;height:auto;display:block}
+.region{transition:fill .5s,opacity .5s}
+.rlab{font-family:var(--sans);font-size:10px;fill:var(--cloud-d);letter-spacing:.04em}
+.rlab b{fill:var(--ink);font-size:11px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-family:var(--sans);font-size:10.5px;color:var(--cloud-d)}
+.legend span i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+/* ---------- scene ---------- */
+.scene{margin-top:20px;background:var(--manilla);border-radius:16px;padding:22px 26px}
+.scene .sw{font-size:26px;font-style:italic;font-weight:700}
+.scene .sg{font-family:var(--sans);font-size:11px;color:var(--clay);font-weight:700;letter-spacing:.1em;margin-left:12px}
+.scene .satz{font-size:15px;margin-top:8px}
+.scene .satz .cn{display:block;font-size:13px;color:var(--cloud-d);margin-top:2px}
+.scene .sd{font-size:13px;margin-top:10px;line-height:1.7}
+/* ---------- three classes ---------- */
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+@media(max-width:860px){.trio{grid-template-columns:1fr}}
+.trio .card{padding:20px 22px;border-top:4px solid var(--stone)}
+.trio .card.c1{border-top-color:var(--clay)}
+.trio .card.c2{border-top-color:var(--olive)}
+.trio .card.c3{border-top-color:var(--slate)}
+.trio .no{font-family:var(--sans);font-size:10px;letter-spacing:.12em;color:var(--cloud-d);font-weight:700}
+.trio .tt{font-size:17px;font-weight:700;margin:6px 0 2px}
+.trio .ws{font-size:15px;font-style:italic;margin:10px 0 6px;line-height:1.8}
+.trio .ws b{color:var(--clay);font-weight:700}
+.trio .dd{font-size:12.5px;color:var(--ink)}
+/* ---------- note & footer ---------- */
+.note{margin:26px 0 8px;background:var(--manilla);border-radius:14px;padding:18px 22px}
+.note .tag{font-family:var(--sans);font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:700;display:block;margin-bottom:8px}
+.note p{font-size:13.5px;line-height:1.7}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:860px){.grid-2{grid-template-columns:1fr}}
+footer{border-top:1px solid var(--stone);margin-top:48px;padding:26px 0 44px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:10.5px;color:var(--cloud-d);letter-spacing:.08em}
+footer a{color:var(--clay);text-decoration:none}
+.fade{opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+.fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wrap">
+    <div class="brand">Onomatopoesie · Visualisierung <b>02 / 08</b></div>
+    <div class="links">
+      <a href="viz00_index.html">索引</a>
+      <a href="viz01_bouba-kiki.html">01 象似性</a>
+      <a class="on" href="viz02_crossmodal.html">02 跨模态</a>
+      <a href="viz03_artikulation.html">03 具身发音</a>
+      <a href="viz04_mentales-lexikon.html">04 心理词典</a>
+      <a href="viz05_reifikation.html">05 物化</a>
+      <a href="viz06_metapher.html">06 隐喻</a>
+      <a href="viz07_interjektion.html">07 感叹词习得</a>
+      <a href="viz08_didaktik.html">08 教学</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Visualisierung 02 · Cross-modale Wahrnehmung · 跨模态感知</div>
+    <h1>一个词，点亮五种感官
+      <span class="de">拟声词在大脑里激活的，从不只是听觉通道</span>
+    </h1>
+    <p class="lead">听到 <i>knistern</i>，你不仅「听见」雪，还「感到」寒冷颗粒、「看见」白色画面；听到 <i>brutzeln</i>，声音在大脑里是可以<em>尝到</em>的。点击下方任意拟声词，观察它在大脑中同时点亮的感官通道。</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ A. 选词器 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">A</div><div class="sec-title">选一个词 · 教材的三类声源<span class="de">DREI KLANGQUELLEN · 点击触发</span></div></div>
+  <div class="card">
+    <div class="src-group">
+      <div class="src-head"><span class="src-dot" style="background:var(--clay)"></span><span class="src-name">图 1 · 人类发声</span><span class="src-de">MENSCHLICHE STIMME</span></div>
+      <div class="wordrow">
+        <button class="wbtn" data-w="bruellen">brüllen<small>咆哮</small></button>
+        <button class="wbtn" data-w="kichern">kichern<small>窃笑</small></button>
+        <button class="wbtn" data-w="schnarchen">schnarchen<small>打鼾</small></button>
+      </div>
+    </div>
+    <div class="src-group">
+      <div class="src-head"><span class="src-dot" style="background:var(--olive)"></span><span class="src-name">图 3 · 自然之声</span><span class="src-de">NATURLAUTE</span></div>
+      <div class="wordrow">
+        <button class="wbtn sel" data-w="knistern">knistern<small>雪沙沙响</small></button>
+        <button class="wbtn" data-w="rauschen">rauschen<small>哗哗</small></button>
+        <button class="wbtn" data-w="donnern">donnern<small>轰隆</small></button>
+      </div>
+    </div>
+    <div class="src-group">
+      <div class="src-head"><span class="src-dot" style="background:var(--slate)"></span><span class="src-name">图 4 · 物体之声</span><span class="src-de">GERÄUSCHE VON OBJEKTEN</span></div>
+      <div class="wordrow">
+        <button class="wbtn" data-w="brutzeln">brutzeln<small>油炸滋滋</small></button>
+        <button class="wbtn" data-w="klirren">klirren<small>铿锵叮当</small></button>
+        <button class="wbtn" data-w="knallen">knallen<small>砰然</small></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ B. 五感 + 脑图 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">B</div><div class="sec-title">它点亮了哪些通道？<span class="de">FÜNF SINNESKANÄLE &amp; GEHIRNKARTE</span></div></div>
+  <div class="sense-grid">
+    <div class="card">
+      <h3 class="ct">五感激活强度<span class="de">AKTIVIERUNGSSTÄRKE 0–3</span></h3>
+      <div id="senseRows"></div>
+      <p style="font-size:11.5px;color:var(--cloud-d);margin-top:12px">强度为教学示意（0 = 未激活 · 3 = 强激活）：体现「一次发音，多条感官通道同时被唤起」的编码特征。</p>
+    </div>
+    <div class="card brainbox">
+      <h3 class="ct">大脑激活示意图<span class="de">AKTIVIERUNG IM GEHIRN（侧面示意）</span></h3>
+      <svg viewBox="0 0 460 300" id="brainSvg">
+        <!-- brain outline (facing left) -->
+        <path d="M96,214 C70,196 58,164 70,134 C58,108 78,74 112,66 C124,40 164,28 200,38 C232,20 286,26 310,52 C348,50 382,80 384,116 C402,140 396,184 370,202 C364,236 322,258 282,250 C250,272 196,272 168,252 C128,254 104,238 96,214 Z"
+              fill="#faf9f5" stroke="#141413" stroke-width="2"/>
+        <path d="M96,214 C110,226 130,232 152,230" fill="none" stroke="#cccbc8" stroke-width="1.6"/>
+        <path d="M120,100 C150,84 190,80 226,90" fill="none" stroke="#cccbc8" stroke-width="1.6"/>
+        <path d="M250,80 C286,74 322,86 344,110" fill="none" stroke="#cccbc8" stroke-width="1.6"/>
+        <path d="M180,150 C220,138 268,142 300,160" fill="none" stroke="#cccbc8" stroke-width="1.6"/>
+        <!-- regions: id -> filled when active -->
+        <ellipse class="region" id="rg-hoeren"   cx="196" cy="188" rx="46" ry="30" fill="#c6613f" opacity="0.12"/>
+        <ellipse class="region" id="rg-sehen"    cx="330" cy="120" rx="44" ry="34" fill="#6f7d4f" opacity="0.12"/>
+        <ellipse class="region" id="rg-tasten"   cx="212" cy="86"  rx="52" ry="30" fill="#56717e" opacity="0.12"/>
+        <ellipse class="region" id="rg-riechen"  cx="128" cy="150" rx="34" ry="24" fill="#b08945" opacity="0.12"/>
+        <ellipse class="region" id="rg-schmecken" cx="150" cy="206" rx="32" ry="20" fill="#8f5b7a" opacity="0.12"/>
+        <!-- labels -->
+        <text class="rlab" x="196" y="192" text-anchor="middle"><tspan font-weight="700">听觉皮层</tspan></text>
+        <text class="rlab" x="196" y="206" text-anchor="middle">Temporallappen</text>
+        <text class="rlab" x="330" y="124" text-anchor="middle" font-weight="700">视觉皮层</text>
+        <text class="rlab" x="330" y="138" text-anchor="middle">Okzipitallappen</text>
+        <text class="rlab" x="212" y="90" text-anchor="middle" font-weight="700">体感皮层</text>
+        <text class="rlab" x="212" y="104" text-anchor="middle">Parietallappen</text>
+        <text class="rlab" x="128" y="154" text-anchor="middle" font-weight="700">嗅觉·边缘</text>
+        <text class="rlab" x="128" y="168" text-anchor="middle">olfaktorisch</text>
+        <text class="rlab" x="150" y="210" text-anchor="middle" font-weight="700">味觉</text>
+        <text class="rlab" x="150" y="223" text-anchor="middle">gustatorisch</text>
+      </svg>
+      <div class="legend">
+        <span><i style="background:#c6613f"></i>听觉 Hören</span>
+        <span><i style="background:#6f7d4f"></i>视觉 Sehen</span>
+        <span><i style="background:#56717e"></i>触觉 Tastsinn</span>
+        <span><i style="background:#b08945"></i>嗅觉 Riechen</span>
+        <span><i style="background:#8f5b7a"></i>味觉 Schmecken</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="scene" id="sceneBox">
+    <span class="sw" id="scWord">knistern</span><span class="sg" id="scGloss">雪沙沙响 · KNISTERN</span>
+    <div class="satz"><i id="scSatz">Der Schnee knistert unter den Schuhen.</i><span class="cn" id="scCn">雪在脚下沙沙作响。</span></div>
+    <div class="sd" id="scDesc"></div>
+  </div>
+</section>
+
+<!-- ============ C. 教材三分类 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">C</div><div class="sec-title">教材的认知分类：按「声音从何而来」<span class="de">DREI KLANGQUELLEN · 具身经验即分类标准</span></div></div>
+  <div class="trio">
+    <div class="card c1">
+      <div class="no">教材图 1 · ABB. 1</div>
+      <div class="tt">人类发声 <span style="font-family:var(--sans);font-size:11px;color:var(--cloud-d);font-weight:500">MENSCHLICHE STIMME</span></div>
+      <div class="ws"><b>brüllen</b> 咆哮 · <b>kichern</b> 窃笑 · <b>schnarchen</b> 打鼾</div>
+      <div class="dd">声源是「人的身体」——我们最熟悉的发声器。元音与节奏直接携带情绪信息（愤怒、愉悦、无意识）。</div>
+    </div>
+    <div class="card c2">
+      <div class="no">教材图 3 · ABB. 3</div>
+      <div class="tt">自然之声 <span style="font-family:var(--sans);font-size:11px;color:var(--cloud-d);font-weight:500">NATURLAUTE</span></div>
+      <div class="ws"><b>rauschen</b> 哗哗 · <b>donnern</b> 轰隆 · <b>knistern</b> 沙沙</div>
+      <div class="dd">声源是「环境事件」——持续擦音编码水与风的连续感，低频隆隆声编码雷的能量感。</div>
+    </div>
+    <div class="card c3">
+      <div class="no">教材图 4 · ABB. 4</div>
+      <div class="tt">物体之声 <span style="font-family:var(--sans);font-size:11px;color:var(--cloud-d);font-weight:500">OBJEKTGERÄUSCHE</span></div>
+      <div class="ws"><b>klirren</b> 铿锵 · <b>knallen</b> 砰然 · <b>brutzeln</b> 滋滋</div>
+      <div class="dd">声源是「人造物/材料」——/kl/ 破裂音模拟金属玻璃的脆硬质感，爆裂音模拟瞬时能量释放。</div>
+    </div>
+  </div>
+  <div class="note">
+    <span class="tag">认知要点 · WARUM DIESE KLASSIFIKATION?</span>
+    <p>分类标准不是语音形式，而是<b>「声音从何而来」的具身经验</b>——身体、自然、物体，正是我们感知世界的三个基本来源。教材的分类法本身就是具身认知（Embodiment）的证据：词汇组织方式追随着身体经验的结构。</p>
+  </div>
+</section>
+
+<!-- ============ D. 理论 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">D</div><div class="sec-title">理论落点<span class="de">SYNÄSTHESIE &amp; MULTISENSORISCHE KODIERUNG</span></div></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 class="ct">通感的词汇化<span class="de">Synästhesie</span></h3>
+      <p><i>brutzeln</i> 让声音「可以尝到」——这不是修辞夸张，而是通感（Synästhesie）在词汇层面的固化：听觉形式的词长期与嗅、味觉场景共现，最终一个听觉词就能直接激活味嗅觉区。它与 <a href="viz01_bouba-kiki.html" style="color:var(--clay)">Bouba/Kiki 效应</a>同源：大脑各感觉区之间本就存在跨模态联结。</p>
+    </div>
+    <div class="card">
+      <h3 class="ct">多感官编码 = 更深的记忆<span class="de">Multisensorische Kodierung</span></h3>
+      <p>一个词挂上的感官通道越多，提取线索（Retrieval Cues）就越丰富——这解释了拟声词为何「过耳不忘」，也为 <a href="viz08_didaktik.html" style="color:var(--clay)">可视化 08 的身体记忆法（TPR）</a>提供了认知依据：调用身体多感官参与，是最符合大脑编码规律的学习方式。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 讲者提示 ============ -->
+<div class="note">
+  <span class="tag">SPRECHNOTIZ · 讲者提示（对应汇报 1:40–2:40 · 第 4 页幻灯）</span>
+  <p>拟声词在大脑里激活的不只一个感官。knistern（雪沙沙响）不仅让你「听到」，还唤起触觉——雪的寒冷和颗粒感，以及视觉——白雪的画面。brutzeln（油炸滋滋声）更直接勾起嗅觉和味觉。教材把拟声词按声源分为三类：人类发声、自然之声、物体之声，这个分类标准本身就来自我们的具身经验。现场演示：点 knistern → 三条通道亮起；再点 brutzeln → 嗅觉味觉亮起，形成反差。</p>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>拟声词 · ONOMATOPOESIE —— 破译大脑的声音密码 ｜ 《现代德语词汇学》第五章第一节 · 学术课题小汇报</span>
+    <span><a href="viz01_bouba-kiki.html">← 01 象似性</a> ｜ <a href="viz00_index.html">索引</a> ｜ 下一页：<a href="viz03_artikulation.html">03 具身发音 →</a></span>
+  </div>
+</footer>
+
+<script>
+/* ---------- data ---------- */
+const SENSES=[
+  {id:'hoeren',   cn:'听觉', de:'HÖREN',     color:'#c6613f', icon:'ear'},
+  {id:'sehen',    cn:'视觉', de:'SEHEN',     color:'#6f7d4f', icon:'eye'},
+  {id:'tasten',   cn:'触觉', de:'TASTSINN',  color:'#56717e', icon:'touch'},
+  {id:'riechen',  cn:'嗅觉', de:'RIECHEN',   color:'#b08945', icon:'nose'},
+  {id:'schmecken',cn:'味觉', de:'SCHMECKEN', color:'#8f5b7a', icon:'taste'},
+];
+const DATA={
+  knistern:{gloss:'雪沙沙响 · KNISTERN',satz:'Der Schnee knistert unter den Schuhen.',cn:'雪在脚下沙沙作响。',
+    v:{hoeren:3,tasten:2,sehen:2,riechen:0,schmecken:0},
+    desc:'听觉 ＋ 触觉（寒冷、颗粒感）＋ 视觉（白雪画面）——一次发音，三条感官通道同时被唤起。/kn/ 的颗粒音质把「碎裂的触感」也编码了进来。'},
+  brutzeln:{gloss:'油炸滋滋声 · BRUTZELN',satz:'Der Braten brutzelt im Ofen.',cn:'烤肉在烤箱里滋滋作响。',
+    v:{hoeren:3,riechen:3,schmecken:2,sehen:1,tasten:1},
+    desc:'直接勾起嗅觉与味觉：声音在大脑里是可以「尝到」的——通感（Synästhesie）的词汇化，五词之中跨模态跨度最大。'},
+  rauschen:{gloss:'哗哗 · 自然之声 · RAUSCHEN',satz:'Der Fluss rauscht.',cn:'河水哗哗流淌。',
+    v:{hoeren:3,sehen:1,tasten:1,riechen:0,schmecken:0},
+    desc:'听觉 ＋ 运动觉：水流的连续感被编码进 /r/ 与擦音 /ʃ/ 的延长里——绵延不断的音质即「流动」本身。'},
+  donnern:{gloss:'轰隆 · 雷 · DONNERN',satz:'Es donnert in der Ferne.',cn:'远处雷声隆隆。',
+    v:{hoeren:3,tasten:2,sehen:1,riechen:0,schmecken:0},
+    desc:'低频隆隆声不仅被听见，还被身体「感到」——胸腔共振般的震动感（触觉/本体觉），/d/ 的浊塞起始模拟能量爆发。'},
+  klirren:{gloss:'铿锵 · 物体之声 · KLIRREN',satz:'Die Gläser klirren beim Anstoßen.',cn:'碰杯时玻璃杯叮当作响。',
+    v:{hoeren:3,sehen:2,tasten:1,riechen:0,schmecken:0},
+    desc:'听觉 ＋ 触觉硬度感：/kl/ 破裂音模拟金属与玻璃的脆硬质感——高频、短促、带金属光泽的画面感。'},
+  knallen:{gloss:'砰然 · KNALLEN',satz:'Die Tür knallt zu.',cn:'门砰地一声关上。',
+    v:{hoeren:3,tasten:1,sehen:0,riechen:0,schmecken:0},
+    desc:'瞬时能量释放：爆破音 /k/+/n/ 模拟突发巨响，伴随惊吓般的身体紧缩感——听觉与体感几乎同时到达。'},
+  bruellen:{gloss:'咆哮 · 人类发声 · BRÜLLEN',satz:'Er brüllt vor Wut.',cn:'他愤怒地咆哮。',
+    v:{hoeren:3,sehen:1,tasten:1,riechen:0,schmecken:0},
+    desc:'大音量＋长元音 /ʊː/ 编码愤怒的能量与威胁感；听者脑中同时浮现发怒者的画面——听觉与视觉联动。'},
+  kichern:{gloss:'窃笑 · KICHERN',satz:'Die Mädchen kichern in der Ecke.',cn:'女孩们在角落里窃笑。',
+    v:{hoeren:3,sehen:2,tasten:0,riechen:0,schmecken:0},
+    desc:'高频、短促、重复的音节结构＝压抑着的笑声；同时激活「捂嘴、抖肩」的视觉画面，情绪具有传染性。'},
+  schnarchen:{gloss:'打鼾 · SCHNARCHEN',satz:'Opa schnarcht im Sessel.',cn:'爷爷在扶手椅里打鼾。',
+    v:{hoeren:3,sehen:1,tasten:0,riechen:0,schmecken:0},
+    desc:'/ʃn/+/r/ 的鼻-擦组合模拟软腭振动：节律性、低频、持续——几乎只靠听觉就能「看见」熟睡的画面。'},
+};
+/* ---------- sense rows ---------- */
+const ICONS={
+  ear:'<path d="M15,6 a7,7 0 0 1 7,7 c0,4 -3,5 -4,8 s-2,5 -5,5" fill="none" stroke="COLOR" stroke-width="2" stroke-linecap="round"/><path d="M12,10 a4,4 0 0 1 4,4 c0,2 -1.5,3 -2.2,4.4" fill="none" stroke="COLOR" stroke-width="1.6" stroke-linecap="round"/><path d="M5,15 q-2,2 0,4 M8,19 q-2,2 0,4" fill="none" stroke="COLOR" stroke-width="1.4" stroke-linecap="round"/>',
+  eye:'<path d="M3,15 C7,8 12,6 15,6 s8,2 12,9 c-4,7 -9,9 -12,9 s-8,-2 -12,-9 Z" fill="none" stroke="COLOR" stroke-width="2"/><circle cx="15" cy="15" r="3.4" fill="COLOR"/>',
+  touch:'<circle cx="15" cy="15" r="5" fill="none" stroke="COLOR" stroke-width="2"/><path d="M15,4 v4 M15,22 v4 M4,15 h4 M22,15 h4 M7.2,7.2 l2.8,2.8 M20,20 l2.8,2.8 M22.8,7.2 L20,10 M10,20 l-2.8,2.8" stroke="COLOR" stroke-width="1.6" stroke-linecap="round"/>',
+  nose:'<path d="M12,5 q3,8 1,12 q-1.5,3 -4,3 q-3,0 -3,-3 q0,-2.4 3,-3.4" fill="none" stroke="COLOR" stroke-width="2" stroke-linecap="round"/><path d="M18,6 q2,3 0,6 M21,4 q3,4 1,9" fill="none" stroke="COLOR" stroke-width="1.5" stroke-linecap="round"/>',
+  taste:'<path d="M8,6 q0,9 4,12 q3,2.4 6,0 q4,-3 4,-12" fill="none" stroke="COLOR" stroke-width="2" stroke-linecap="round"/><path d="M15,8 v7" stroke="COLOR" stroke-width="1.5" stroke-linecap="round"/>'
+};
+const rowsBox=document.getElementById('senseRows');
+SENSES.forEach(s=>{
+  const div=document.createElement('div');div.className='srow';
+  div.innerHTML='<svg viewBox="0 0 30 30">'+ICONS[s.icon].replace(/COLOR/g,s.color)+'</svg>'
+    +'<div class="sname">'+s.cn+'<span class="de">'+s.de+'</span></div>'
+    +'<div class="sbar"><i id="bar-'+s.id+'" style="background:'+s.color+'"></i></div>'
+    +'<div class="sval"><b id="val-'+s.id+'">0</b>/3</div>';
+  rowsBox.appendChild(div);
+});
+/* ---------- interaction ---------- */
+function selectWord(key){
+  const d=DATA[key];if(!d)return;
+  document.querySelectorAll('.wbtn').forEach(b=>b.classList.toggle('sel',b.dataset.w===key));
+  SENSES.forEach(s=>{
+    const v=d.v[s.id]||0;
+    document.getElementById('bar-'+s.id).style.width=(v/3*100)+'%';
+    document.getElementById('val-'+s.id).textContent=v;
+    const rg=document.getElementById('rg-'+s.id);
+    if(rg)rg.style.opacity=v===0?0.10:(0.18+v*0.22);
+  });
+  document.getElementById('scWord').textContent=key==='bruellen'?'brüllen':key;
+  document.getElementById('scGloss').textContent=d.gloss;
+  document.getElementById('scSatz').textContent=d.satz;
+  document.getElementById('scCn').textContent=d.cn;
+  document.getElementById('scDesc').textContent=d.desc;
+  const box=document.getElementById('sceneBox');
+  box.style.transition='none';box.style.opacity='0.35';
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{box.style.transition='opacity .45s';box.style.opacity='1';}));
+}
+document.querySelectorAll('.wbtn').forEach(b=>b.addEventListener('click',()=>selectWord(b.dataset.w)));
+selectWord('knistern');
+/* ---------- fade-in ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('section,.note').forEach(el=>{el.classList.add('fade');io.observe(el);});
+</script>
+</body>
+</html>

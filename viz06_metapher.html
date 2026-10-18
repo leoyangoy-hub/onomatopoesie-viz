@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可视化 06 · 概念隐喻 · 跨域映射 — 拟声词 Onomatopoesie</title>
+<style>
+:root{
+  --ink:#141413; --canvas:#f0eee6; --card:#faf9f5; --cloud:#b0aea5; --cloud-d:#87867f;
+  --stone:#cccbc8; --oat:#e3dacc; --manilla:#f5e3c7; --clay:#c6613f; --clay-2:#d97757;
+  --serif:Georgia,"Times New Roman","Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SF Mono",Consolas,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--serif);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(240,238,230,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--stone)}
+.topnav .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:14px;padding-top:6px;padding-bottom:6px;flex-wrap:wrap}
+.brand{font-family:var(--sans);font-size:11px;letter-spacing:.14em;color:var(--cloud-d);font-weight:600;text-transform:uppercase}
+.brand b{color:var(--clay);font-weight:700}
+.links{display:flex;gap:3px;flex-wrap:wrap}
+.links a{font-family:var(--sans);font-size:11px;color:var(--cloud-d);text-decoration:none;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.links a:hover{color:var(--ink);background:var(--oat)}
+.links a.on{background:var(--ink);color:var(--card)}
+.hero{padding:58px 0 30px;border-bottom:1px solid var(--stone)}
+.kicker{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--clay)}
+.hero h1{font-size:46px;font-weight:400;line-height:1.12;margin:16px 0 6px}
+.hero h1 .de{display:block;font-size:22px;color:var(--cloud-d);margin-top:8px;font-weight:400}
+.lead{font-size:16px;max-width:80ch;margin-top:16px}
+.lead em{font-style:normal;color:var(--clay);font-weight:600}
+section{padding:34px 0 6px}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:18px;border-bottom:1px solid var(--stone);padding-bottom:10px}
+.sec-num{font-size:26px;color:var(--cloud)}
+.sec-title{font-size:22px;font-weight:700}
+.sec-title .de{font-family:var(--sans);font-size:12px;color:var(--cloud-d);font-weight:500;margin-left:10px;letter-spacing:.06em}
+.card{background:var(--card);border:1px solid var(--stone);border-radius:16px;padding:24px 26px}
+h3.ct{font-size:17px;font-weight:700}
+h3.ct .de{font-family:var(--sans);font-size:11.5px;color:var(--cloud-d);font-weight:500;margin-left:8px;font-style:italic}
+.card p{font-size:13.5px;margin-top:10px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:860px){.grid-2{grid-template-columns:1fr}}
+/* ---------- theory ---------- */
+.theory{display:grid;grid-template-columns:1fr 120px 1fr;gap:14px;align-items:stretch}
+@media(max-width:860px){.theory{grid-template-columns:1fr}.theory .th-arr{transform:rotate(90deg);height:60px}}
+.th-box{background:var(--card);border:1px solid var(--stone);border-radius:14px;padding:18px 20px}
+.th-box .t{font-family:var(--sans);font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:700}
+.th-box .w{font-size:17px;font-weight:700;margin:6px 0}
+.th-box .d{font-size:12.5px}
+.th-arr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.th-arr .g{font-size:30px;color:var(--clay);font-weight:700;font-family:var(--sans)}
+.th-arr .l{font-family:var(--sans);font-size:9.5px;letter-spacing:.08em;color:var(--cloud-d);font-weight:700;text-align:center}
+/* ---------- mapping lanes ---------- */
+.lane{display:grid;grid-template-columns:1fr 150px 1fr;gap:0;align-items:stretch;margin-bottom:18px;background:var(--card);border:1px solid var(--stone);border-radius:16px;overflow:hidden;transition:border-color .3s}
+.lane:hover{border-color:var(--clay)}
+@media(max-width:860px){.lane{grid-template-columns:1fr}.lane .larr{transform:rotate(90deg);height:64px}}
+.src,.tgt{padding:20px 22px}
+.src{background:var(--canvas);border-right:1px dashed var(--stone)}
+.src .lab,.tgt .lab{font-family:var(--sans);font-size:9.5px;letter-spacing:.14em;font-weight:700}
+.src .lab{color:var(--cloud-d)}
+.tgt .lab{color:var(--clay)}
+.src .w,.tgt .w{font-size:19px;font-weight:700;font-style:italic;margin:5px 0 8px}
+.src .animal{display:inline-block;font-family:var(--sans);font-size:10px;background:var(--oat);border-radius:999px;padding:2px 10px;margin-bottom:8px;color:var(--ink)}
+.fchips{display:flex;gap:6px;flex-wrap:wrap}
+.fchips span{font-family:var(--sans);font-size:10.5px;background:var(--manilla);border-radius:8px;padding:3px 10px}
+.tgt .bsp{font-size:13px;font-style:italic;margin-top:4px}
+.tgt .bsp small{display:block;font-family:var(--sans);font-style:normal;font-size:11px;color:var(--cloud-d);margin-top:3px}
+.larr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;position:relative;background:var(--card);transition:background .3s}
+.larr:hover{background:var(--manilla)}
+.larr .glyph{font-size:26px;color:var(--clay);font-weight:700;font-family:var(--sans)}
+.larr .txt{font-family:var(--sans);font-size:9px;letter-spacing:.1em;color:var(--cloud-d);font-weight:700;text-align:center;line-height:1.4}
+.larr .hint{font-family:var(--sans);font-size:8.5px;color:var(--clay);font-weight:700;opacity:.7}
+/* flowing particles */
+.particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.dot{position:absolute;width:7px;height:7px;border-radius:50%;background:var(--clay);opacity:0}
+.lane.go .dot{animation:travel 1s ease-in forwards}
+.lane.go .dot:nth-child(2){animation-delay:.15s}
+.lane.go .dot:nth-child(3){animation-delay:.3s}
+.lane.go .dot:nth-child(4){animation-delay:.45s}
+.lane.go .dot:nth-child(5){animation-delay:.6s}
+@keyframes travel{
+  0%{left:6%;top:50%;opacity:0;transform:translateY(-50%) scale(.6)}
+  15%{opacity:1}
+  85%{opacity:1}
+  100%{left:92%;top:50%;opacity:0;transform:translateY(-50%) scale(1)}
+}
+@media(max-width:860px){
+  @keyframes travel{
+    0%{left:50%;top:6%;opacity:0;transform:translateX(-50%) scale(.6)}
+    15%{opacity:1}
+    85%{opacity:1}
+    100%{left:50%;top:92%;opacity:0;transform:translateX(-50%) scale(1)}
+  }
+}
+.schema{background:var(--manilla);font-family:var(--sans);font-size:10.5px;font-weight:700;color:var(--clay);text-align:center;padding:7px 10px;letter-spacing:.1em;border-top:1px solid var(--stone)}
+/* ---------- note & footer ---------- */
+.note{margin:26px 0 8px;background:var(--manilla);border-radius:14px;padding:18px 22px}
+.note .tag{font-family:var(--sans);font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:700;display:block;margin-bottom:8px}
+.note p{font-size:13.5px;line-height:1.7}
+footer{border-top:1px solid var(--stone);margin-top:48px;padding:26px 0 44px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:10.5px;color:var(--cloud-d);letter-spacing:.08em}
+footer a{color:var(--clay);text-decoration:none}
+.fade{opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+.fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wrap">
+    <div class="brand">Onomatopoesie · Visualisierung <b>06 / 08</b></div>
+    <div class="links">
+      <a href="viz00_index.html">索引</a>
+      <a href="viz01_bouba-kiki.html">01 象似性</a>
+      <a href="viz02_crossmodal.html">02 跨模态</a>
+      <a href="viz03_artikulation.html">03 具身发音</a>
+      <a href="viz04_mentales-lexikon.html">04 心理词典</a>
+      <a href="viz05_reifikation.html">05 物化</a>
+      <a class="on" href="viz06_metapher.html">06 隐喻</a>
+      <a href="viz07_interjektion.html">07 感叹词习得</a>
+      <a href="viz08_didaktik.html">08 教学</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Visualisierung 06 · Konzeptuelle Metapher · 概念隐喻</div>
+    <h1>动物的叫声，如何住进人的行为里
+      <span class="de">Lakoff &amp; Johnson (1980) —— 四条从动物到人的跨域映射</span>
+    </h1>
+    <p class="lead">概念隐喻理论：我们用<em>具体、熟悉的源域</em>（Quellbereich）去理解<em>抽象的目标域</em>（Zielbereich）。德语把动物叫声的声学特征整张「搬」进人类行为的描写——点击每条泳道中间的陶土箭头，看特征粒子如何从动物一侧流向人一侧。</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ A. 理论卡 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">A</div><div class="sec-title">理论底座：域与域之间的搬运<span class="de">DOMÄNEN-MAPPING · IMAGE SCHEMA</span></div></div>
+  <div class="theory">
+    <div class="th-box">
+      <div class="t">QUELLBEREICH · 源域</div>
+      <div class="w">动物叫声 Tierlaute</div>
+      <div class="d">具体、可听、身体经验直接可达：狗吠的攻击性、熊吼的低沉、母鸡的高频重复、乌鸦的沙哑。</div>
+    </div>
+    <div class="th-arr">
+      <span class="g">⇢</span>
+      <span class="l">MAPPING<br>系统性映射<br>共享意象图式<br>IMAGE SCHEMA</span>
+    </div>
+    <div class="th-box">
+      <div class="t">ZIELBEREICH · 目标域</div>
+      <div class="w">人类行为 Menschliches Verhalten</div>
+      <div class="d">抽象、需借助具体经验来组织：叫骂、嘟囔、喋喋不休、沙哑地讲唱——声音特征原封不动地「过户」。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ B. 四条映射泳道 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">B</div><div class="sec-title">四条跨域映射泳道<span class="de">VIER MAPPINGS · 点击箭头播放特征流</span></div></div>
+
+  <div class="lane" id="lane1">
+    <div class="src">
+      <span class="lab">QUELLE · 源域</span>
+      <div class="w">bellen</div>
+      <span class="animal">🐕 Hund 狗</span>
+      <div class="fchips"><span>攻击性</span><span>突发</span><span>高频</span></div>
+    </div>
+    <div class="larr" data-lane="lane1">
+      <span class="glyph">⇢</span>
+      <span class="txt">特征迁移<br>FEATURE<br>TRANSFER</span>
+      <span class="hint">▶ 点击播放</span>
+      <div class="particles"><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></div>
+    </div>
+    <div class="tgt">
+      <span class="lab">ZIEL · 目标域</span>
+      <div class="w">anbrüllen · schimpfen</div>
+      <div class="bsp">„Der Chef brüllt ihn vor allen Leuten an.“
+        <small>老板当众对他大吼大叫 —— 人的叫骂继承了狗吠的攻击性与突发感</small></div>
+    </div>
+    <div class="schema" style="grid-column:1/-1">意象图式 IMAGE SCHEMA：突发的声音冲击 · SUDDEN ACOUSTIC ASSAULT</div>
+  </div>
+
+  <div class="lane" id="lane2">
+    <div class="src">
+      <span class="lab">QUELLE · 源域</span>
+      <div class="w">brummen</div>
+      <span class="animal">🐻 Bär 熊</span>
+      <div class="fchips"><span>低沉</span><span>含混</span><span>持续</span></div>
+    </div>
+    <div class="larr" data-lane="lane2">
+      <span class="glyph">⇢</span>
+      <span class="txt">特征迁移<br>FEATURE<br>TRANSFER</span>
+      <span class="hint">▶ 点击播放</span>
+      <div class="particles"><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></div>
+    </div>
+    <div class="tgt">
+      <span class="lab">ZIEL · 目标域</span>
+      <div class="w">mürrisch murmeln</div>
+      <div class="bsp">„Er brummt nur, statt klar zu antworten.“
+        <small>他只是嘟囔发牢骚，不肯清楚回答 —— 低频含混平移为不满的情绪底色</small></div>
+    </div>
+    <div class="schema" style="grid-column:1/-1">意象图式 IMAGE SCHEMA：低频持续共振 · LOW-FREQUENCY RUMBLE</div>
+  </div>
+
+  <div class="lane" id="lane3">
+    <div class="src">
+      <span class="lab">QUELLE · 源域</span>
+      <div class="w">gackern</div>
+      <span class="animal">🐔 Henne 母鸡</span>
+      <div class="fchips"><span>高频重复</span><span>无实质</span><span>碎嘴</span></div>
+    </div>
+    <div class="larr" data-lane="lane3">
+      <span class="glyph">⇢</span>
+      <span class="txt">特征迁移<br>FEATURE<br>TRANSFER</span>
+      <span class="hint">▶ 点击播放</span>
+      <div class="particles"><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></div>
+    </div>
+    <div class="tgt">
+      <span class="lab">ZIEL · 目标域</span>
+      <div class="w">dummes Zeug reden</div>
+      <div class="bsp">„Sie gackern den ganzen Nachmittag über die Nachbarn.“
+        <small>她们一下午叽叽喳喳议论邻居 —— 高频重复 + 内容空洞被一并借走</small></div>
+    </div>
+    <div class="schema" style="grid-column:1/-1">意象图式 IMAGE SCHEMA：高频空洞重复 · EMPTY REPETITION</div>
+  </div>
+
+  <div class="lane" id="lane4">
+    <div class="src">
+      <span class="lab">QUELLE · 源域</span>
+      <div class="w">krächzen</div>
+      <span class="animal">🐦‍⬛ Krähe 乌鸦</span>
+      <div class="fchips"><span>粗糙</span><span>刺耳</span><span>沙哑</span></div>
+    </div>
+    <div class="larr" data-lane="lane4">
+      <span class="glyph">⇢</span>
+      <span class="txt">特征迁移<br>FEATURE<br>TRANSFER</span>
+      <span class="hint">▶ 点击播放</span>
+      <div class="particles"><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i></div>
+    </div>
+    <div class="tgt">
+      <span class="lab">ZIEL · 目标域</span>
+      <div class="w">heiser sprechen / singen</div>
+      <div class="bsp">„Nach dem Konzert krächzt sie nur noch.“
+        <small>演唱会之后她嗓子哑得只能「乌鸦叫」—— 粗糙刺耳直接描写人的嗓音状态</small></div>
+    </div>
+    <div class="schema" style="grid-column:1/-1">意象图式 IMAGE SCHEMA：粗糙摩擦质感 · ROUGH TEXTURE</div>
+  </div>
+</section>
+
+<!-- ============ C. 要点收束 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">C</div><div class="sec-title">为什么这套隐喻成立<span class="de">WARUM DIESE METAPHERN FUNKTIONIEREN</span></div></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 class="ct">特征守恒<span class="de">Feature Preservation</span></h3>
+      <p>映射不是任意联想：只有<b>共享意象图式</b>（image schema）的特征才会迁移——bellen 的攻击性突发、brummen 的低频持续、gackern 的高频空洞、krächzen 的粗糙质感，在人身上一一对应，分毫不差。</p>
+    </div>
+    <div class="card" style="background:var(--manilla);border:none">
+      <h3 class="ct">词汇证据<span class="de">Lexical Evidence</span></h3>
+      <p>这些动词在词典中同时登记「动物」与「人」两个义项，说明隐喻已经<b>固化（lexikalisiert）</b>进心理词典——概念隐喻不是修辞装饰，而是词汇系统的组织原则。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 讲者提示 ============ -->
+<div class="note">
+  <span class="tag">SPRECHNOTIZ · 讲者提示（对应汇报 6:10–7:10 · 第 8 页幻灯）</span>
+  <p>Lakoff &amp; Johnson (1980) 的概念隐喻理论告诉我们，抽象概念通过具体经验来理解。德语把动物叫声映射到人类行为：bellen（狗吠）→ anbrüllen/schimpfen（人的叫骂）；brummen（熊吼）→ mürrisch murmeln（嘟囔发牢骚）；gackern（母鸡咯咯）→ dummes Zeug reden（喋喋不休）；krächzen（乌鸦叫）→ heiser sprechen（沙哑地讲唱）。每条映射中，源域的声学特征——攻击性、低频、高频重复、粗糙——都完整保留在目标域里。现场点一条泳道播放特征流动画即可。</p>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>拟声词 · ONOMATOPOESIE —— 破译大脑的声音密码 ｜ 《现代德语词汇学》第五章第一节 · 学术课题小汇报</span>
+    <span><a href="viz05_reifikation.html">← 05 物化</a> ｜ <a href="viz00_index.html">索引</a> ｜ 下一页：<a href="viz07_interjektion.html">07 感叹词习得 →</a></span>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.larr').forEach(a=>{
+  a.addEventListener('click',()=>{
+    const lane=document.getElementById(a.dataset.lane);
+    lane.classList.remove('go');void lane.offsetWidth;lane.classList.add('go');
+  });
+});
+/* fade-in */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('section,.note').forEach(el=>{el.classList.add('fade');io.observe(el);});
+</script>
+</body>
+</html>

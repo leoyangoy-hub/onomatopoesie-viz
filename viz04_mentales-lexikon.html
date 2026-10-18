@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可视化 04 · 心理词典 · 语义网络与负迁移 — 拟声词 Onomatopoesie</title>
+<style>
+:root{
+  --ink:#141413; --canvas:#f0eee6; --card:#faf9f5; --cloud:#b0aea5; --cloud-d:#87867f;
+  --stone:#cccbc8; --oat:#e3dacc; --manilla:#f5e3c7; --clay:#c6613f; --clay-2:#d97757;
+  --serif:Georgia,"Times New Roman","Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SF Mono",Consolas,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--serif);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(240,238,230,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--stone)}
+.topnav .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:14px;padding-top:6px;padding-bottom:6px;flex-wrap:wrap}
+.brand{font-family:var(--sans);font-size:11px;letter-spacing:.14em;color:var(--cloud-d);font-weight:600;text-transform:uppercase}
+.brand b{color:var(--clay);font-weight:700}
+.links{display:flex;gap:3px;flex-wrap:wrap}
+.links a{font-family:var(--sans);font-size:11px;color:var(--cloud-d);text-decoration:none;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.links a:hover{color:var(--ink);background:var(--oat)}
+.links a.on{background:var(--ink);color:var(--card)}
+.hero{padding:58px 0 30px;border-bottom:1px solid var(--stone)}
+.kicker{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--clay)}
+.hero h1{font-size:46px;font-weight:400;line-height:1.12;margin:16px 0 6px}
+.hero h1 .de{display:block;font-size:22px;color:var(--cloud-d);margin-top:8px;font-weight:400}
+.lead{font-size:16px;max-width:80ch;margin-top:16px}
+.lead em{font-style:normal;color:var(--clay);font-weight:600}
+section{padding:34px 0 6px}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:18px;border-bottom:1px solid var(--stone);padding-bottom:10px}
+.sec-num{font-size:26px;color:var(--cloud)}
+.sec-title{font-size:22px;font-weight:700}
+.sec-title .de{font-family:var(--sans);font-size:12px;color:var(--cloud-d);font-weight:500;margin-left:10px;letter-spacing:.06em}
+.card{background:var(--card);border:1px solid var(--stone);border-radius:16px;padding:24px 26px}
+h3.ct{font-size:17px;font-weight:700}
+h3.ct .de{font-family:var(--sans);font-size:11.5px;color:var(--cloud-d);font-weight:500;margin-left:8px;font-style:italic}
+.card p{font-size:13.5px;margin-top:10px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:860px){.grid-2{grid-template-columns:1fr}}
+/* ---------- network ---------- */
+.net{display:grid;grid-template-columns:1.35fr 1fr;gap:20px}
+@media(max-width:980px){.net{grid-template-columns:1fr}}
+.net svg{width:100%;height:auto;display:block}
+.edge{stroke:var(--stone);stroke-width:2;transition:all .4s}
+.edge.on{stroke:var(--clay);stroke-width:3.2;stroke-dasharray:7 6;animation:flow 1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-13}}
+.node{cursor:pointer}
+.node circle{fill:var(--card);stroke:var(--ink);stroke-width:1.8;transition:all .3s}
+.node:hover circle{stroke:var(--clay);stroke-width:2.6}
+.node.sel circle{fill:var(--ink);stroke:var(--ink)}
+.node.sel .nl{fill:var(--card);font-weight:700}
+.node text{font-family:var(--sans);pointer-events:none}
+.nl{font-size:12.5px;fill:var(--ink);font-weight:600;text-anchor:middle}
+.nl2{font-size:9.5px;fill:var(--cloud-d);text-anchor:middle}
+.node.sel .nl2{fill:var(--cloud)}
+.hub circle{fill:var(--manilla);stroke:var(--clay);stroke-width:2.4}
+.hub .nl{font-size:15px;fill:var(--ink);font-weight:700}
+.hub .nl2{font-size:10.5px;fill:var(--clay)}
+.pulse{fill:none;stroke:var(--clay);stroke-width:2;opacity:0}
+.pulse.go{animation:pw 1s ease-out}
+@keyframes pw{0%{opacity:.8;stroke-width:6}100%{opacity:0;stroke-width:1}}
+/* ---------- detail panel ---------- */
+.detail{position:sticky;top:76px;align-self:start}
+.detail .dw{font-size:26px;font-weight:700;font-style:italic}
+.detail .dg{font-family:var(--sans);font-size:12px;color:var(--clay);font-weight:700;letter-spacing:.08em;margin:2px 0 12px}
+.drow{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--stone);font-size:13px}
+.drow .k{font-family:var(--sans);font-size:10px;letter-spacing:.1em;color:var(--cloud-d);font-weight:700;width:86px;flex-shrink:0;padding-top:2px}
+.drow .v{flex:1}
+.drow .v i{font-style:italic}
+.drow .v .cn{color:var(--cloud-d);font-size:12px}
+.bsp{background:var(--oat);border-radius:10px;padding:10px 14px;margin-top:12px;font-size:13px}
+.bsp .de-s{display:block;font-style:italic}
+.bsp .zh-s{display:block;font-size:12px;color:var(--cloud-d);margin-top:2px}
+.mini-net{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap}
+.mini-net span{font-family:var(--sans);font-size:10.5px;background:var(--canvas);border:1px solid var(--stone);border-radius:999px;padding:3px 10px}
+/* ---------- warning ---------- */
+.warn{display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:16px;overflow:hidden;border:1px solid var(--stone)}
+@media(max-width:860px){.warn{grid-template-columns:1fr}}
+.warn .bad{background:#efe4e0;padding:22px 26px;border-right:1px solid var(--stone)}
+.warn .good{background:var(--manilla);padding:22px 26px}
+.warn .tag{font-family:var(--sans);font-size:10px;letter-spacing:.14em;font-weight:700;display:block;margin-bottom:10px}
+.warn .bad .tag{color:#a03d2a}
+.warn .good .tag{color:var(--clay)}
+.warn p{font-size:13.5px;line-height:1.7}
+.warn .arrow{font-size:15px;font-weight:700;font-family:var(--mono)}
+/* ---------- aitchison ---------- */
+.ait{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:980px){.ait{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.ait{grid-template-columns:1fr}}
+.ait .card{padding:18px 20px}
+.ait .no{font-family:var(--sans);font-size:10px;color:var(--cloud);font-weight:700;letter-spacing:.1em}
+.ait .t{font-size:15px;font-weight:700;margin:4px 0 6px}
+.ait .d{font-size:12.5px}
+/* ---------- note & footer ---------- */
+.note{margin:26px 0 8px;background:var(--manilla);border-radius:14px;padding:18px 22px}
+.note .tag{font-family:var(--sans);font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:700;display:block;margin-bottom:8px}
+.note p{font-size:13.5px;line-height:1.7}
+footer{border-top:1px solid var(--stone);margin-top:48px;padding:26px 0 44px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:10.5px;color:var(--cloud-d);letter-spacing:.08em}
+footer a{color:var(--clay);text-decoration:none}
+.fade{opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+.fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wrap">
+    <div class="brand">Onomatopoesie · Visualisierung <b>04 / 08</b></div>
+    <div class="links">
+      <a href="viz00_index.html">索引</a>
+      <a href="viz01_bouba-kiki.html">01 象似性</a>
+      <a href="viz02_crossmodal.html">02 跨模态</a>
+      <a href="viz03_artikulation.html">03 具身发音</a>
+      <a class="on" href="viz04_mentales-lexikon.html">04 心理词典</a>
+      <a href="viz05_reifikation.html">05 物化</a>
+      <a href="viz06_metapher.html">06 隐喻</a>
+      <a href="viz07_interjektion.html">07 感叹词习得</a>
+      <a href="viz08_didaktik.html">08 教学</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Visualisierung 04 · Mentales Lexikon · 心理词典</div>
+    <h1>词不住在字典里，住在网络里
+      <span class="de">心理词典中的语义网络 —— 以「动物叫声 Tierlaute」为例</span>
+    </h1>
+    <p class="lead">Aitchison (2003) 指出：心理词典中的词<em>并非孤立储存</em>，而是嵌入相互联结的语义网络。点击网络中的动物节点，观察每个拟声词如何携带动词、儿语、搭配与情感色彩——以及为什么不能用中文网络去「直译」德语网络。</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ A. 语义网络 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">A</div><div class="sec-title">交互语义网络：动物叫声<span class="de">SEMANTISCHES NETZ · TIERLAUTE</span></div></div>
+  <div class="net">
+    <div class="card">
+      <svg viewBox="0 0 620 520" id="netSvg">
+        <!-- edges -->
+        <g id="edges">
+          <line class="edge" data-n="hund"    x1="310" y1="260" x2="130" y2="110"/>
+          <line class="edge" data-n="hahn"    x1="310" y1="260" x2="330" y2="72"/>
+          <line class="edge" data-n="baer"    x1="310" y1="260" x2="520" y2="120"/>
+          <line class="edge" data-n="katze"   x1="310" y1="260" x2="540" y2="300"/>
+          <line class="edge" data-n="schwein" x1="310" y1="260" x2="460" y2="450"/>
+          <line class="edge" data-n="kraehe"  x1="310" y1="260" x2="150" y2="440"/>
+        </g>
+        <!-- hub -->
+        <g class="node hub" data-n="hub">
+          <circle cx="310" cy="260" r="62"/>
+          <text class="nl" x="310" y="252">动物叫声</text>
+          <text class="nl" x="310" y="270" style="font-size:11px">Tierlaute</text>
+          <text class="nl2" x="310" y="288">SEMANTISCHES FELD</text>
+        </g>
+        <!-- animal nodes -->
+        <g class="node" data-n="hund">
+          <circle cx="130" cy="110" r="46"/><circle class="pulse" cx="130" cy="110" r="46"/>
+          <text class="nl" x="130" y="104">Hund</text>
+          <text class="nl2" x="130" y="120">狗 · bellen</text>
+        </g>
+        <g class="node" data-n="hahn">
+          <circle cx="330" cy="72" r="46"/><circle class="pulse" cx="330" cy="72" r="46"/>
+          <text class="nl" x="330" y="66">Hahn</text>
+          <text class="nl2" x="330" y="82">公鸡 · krähen</text>
+        </g>
+        <g class="node" data-n="baer">
+          <circle cx="520" cy="120" r="46"/><circle class="pulse" cx="520" cy="120" r="46"/>
+          <text class="nl" x="520" y="114">Bär</text>
+          <text class="nl2" x="520" y="130">熊 · brummen</text>
+        </g>
+        <g class="node" data-n="katze">
+          <circle cx="540" cy="300" r="46"/><circle class="pulse" cx="540" cy="300" r="46"/>
+          <text class="nl" x="540" y="294">Katze</text>
+          <text class="nl2" x="540" y="310">猫 · miauen</text>
+        </g>
+        <g class="node" data-n="schwein">
+          <circle cx="460" cy="450" r="46"/><circle class="pulse" cx="460" cy="450" r="46"/>
+          <text class="nl" x="460" y="444">Schwein</text>
+          <text class="nl2" x="460" y="460">猪 · grunzen</text>
+        </g>
+        <g class="node" data-n="kraehe">
+          <circle cx="150" cy="440" r="46"/><circle class="pulse" cx="150" cy="440" r="46"/>
+          <text class="nl" x="150" y="434">Krähe</text>
+          <text class="nl2" x="150" y="450">乌鸦 · krächzen</text>
+        </g>
+      </svg>
+      <p style="font-size:11px;color:var(--cloud-d);margin-top:6px">点击任意节点 → 右侧显示该词条在心理词典中的完整「档案」，连线高亮 = 激活扩散（Aktivierungssausbreitung / spreading activation）。</p>
+    </div>
+
+    <div class="card detail" id="detailCard">
+      <div class="dw" id="dWord">选择一个节点</div>
+      <div class="dg" id="dGloss">KNOTEN WÄHLEN</div>
+      <div id="dBody">
+        <p style="font-size:13px;color:var(--cloud-d)">每个动物叫声词都不是一个孤立的「词」，而是一个网络节点：动词、拟声形式、儿语、中文对应、搭配习惯与情感色彩被捆绑储存（Chunk / 语块）。点击左侧任一动物查看。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ B. 负迁移警示 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">B</div><div class="sec-title">为什么不能直译：负迁移<span class="de">NEGATIVTRANSFER · 认知契约</span></div></div>
+  <div class="warn">
+    <div class="bad">
+      <span class="tag">✗ NEGATIVTRANSFER · 负迁移</span>
+      <p>拿中文的「汪汪」去套德语 <i>Hund</i> 的叫声，看似方便，实则<b>激活了错误的语义网络</b>：中文网络里「汪汪」捆绑的是汉语的音系习惯与联想；德语网络里 <i>wau wau</i> 联结的是 <i>bellen · kläffen · Wauwau（儿语）</i> 与另一套搭配。两种语言对同一声音事件的「语音修剪」不同——这正是跨语言学习的陷阱。</p>
+      <p style="margin-top:8px"><span class="arrow">汪汪 → Hund?</span> <span style="color:#a03d2a;font-weight:700">网络错接，记忆失真</span></p>
+    </div>
+    <div class="good">
+      <span class="tag">✓ CHUNK-LERNEN · 语块整体记忆</span>
+      <p>正确策略：把 <i>der Hund bellt „wau wau“</i> 作为<b>整体语块（Chunk）</b>存入德语网络，而非经过中文翻译中转。这是双语者之间的「认知契约」（Kognitive Konvention）：每种语言社群约定了自己的声音—符号对应关系，学习者要签下的是<b>德语这一份</b>。</p>
+      <p style="margin-top:8px"><span class="arrow">der Hund bellt „wau wau“</span> <span style="color:var(--clay);font-weight:700">整体存入 · 网络归位</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ C. Aitchison 特征 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">C</div><div class="sec-title">心理词典的四个特征<span class="de">AITCHISON (2003) · WORDS IN THE MIND</span></div></div>
+  <div class="ait">
+    <div class="card"><div class="no">01</div><div class="t">网络化储存</div><div class="d">词与词通过语义、语音、搭配多重联结组成网络（semantic network），提取一个词会连带激活邻近词。</div></div>
+    <div class="card"><div class="no">02</div><div class="t">提取速度快</div><div class="d">母语者从数万词中检索一个词仅需零点几秒——心理词典的组织远比纸质词典高效。</div></div>
+    <div class="card"><div class="no">03</div><div class="t">意义多维捆绑</div><div class="d">每个词条同时储存语音、拼写、句法、语义、语域与情感色彩——拟声词还多一层「声音象似」的感知印记。</div></div>
+    <div class="card"><div class="no">04</div><div class="t">动态可塑</div><div class="d">网络随经验不断重连：二语学习者的新词若挂错节点，就会产生负迁移；挂对节点，网络才真正「德语化」。</div></div>
+  </div>
+</section>
+
+<!-- ============ 讲者提示 ============ -->
+<div class="note">
+  <span class="tag">SPRECHNOTIZ · 讲者提示（对应汇报 3:40–4:10 · 第 6 页幻灯）</span>
+  <p>Aitchison (2003) 告诉我们，心理词典中的词并非孤立储存，而是嵌入语义网络。以动物叫声为例：der Hund bellt „wau wau“（狗吠），der Hahn kräht „kikeriki“（鸡鸣）。如果拿中文的「汪汪」去套德语狗叫，就会激活错误的语义网络（Negativtransfer 负迁移）。因此应把「der Hund bellt wau wau」作为整体语块（Chunk）记忆——这是双语者之间的认知契约（Kognitive Konvention）。现场可点开 Hund 与 Hahn 两个节点演示激活扩散。</p>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>拟声词 · ONOMATOPOESIE —— 破译大脑的声音密码 ｜ 《现代德语词汇学》第五章第一节 · 学术课题小汇报</span>
+    <span><a href="viz03_artikulation.html">← 03 具身发音</a> ｜ <a href="viz00_index.html">索引</a> ｜ 下一页：<a href="viz05_reifikation.html">05 物化 →</a></span>
+  </div>
+</footer>
+
+<script>
+const DATA={
+  hund:{
+    word:"wau wau", gloss:"DER HUND BELLT · 狗吠",
+    verb:["bellen","（狗）吠叫 —— 中性、最常用的动物叫声动词"],
+    child:["Wauwau","（儿语）小狗"],
+    cn:"汪汪",
+    note:"吠叫在德语网络中为中性描写；网络同时联结 kläffen（尖声乱叫，贬义）与 das Bellen（名词化）。",
+    bsp:["Der Hund bellt den Briefträger an.","狗冲着邮递员吠叫。"],
+    links:["bellen","kläffen","Wauwau","das Bellen"]
+  },
+  hahn:{
+    word:"kikeriki", gloss:"DER HAHN KRÄHT · 鸡鸣",
+    verb:["krähen","（公鸡）啼鸣 —— 专属于清晨的叫声动词"],
+    child:["Kikeriki","可直接作呼喊声使用"],
+    cn:"喔喔",
+    note:"联结清晨、乡村、唤醒的语义场景；谚语 „krähen auf dem Mist“（在自己的地盘上称雄）扩展了隐喻网络。",
+    bsp:["Der Hahn kräht jeden Morgen um fünf Uhr.","公鸡每天清晨五点打鸣。"],
+    links:["krähen","Kikeriki","Morgen","Wecken"]
+  },
+  baer:{
+    word:"brummen", gloss:"DER BÄR BRUMMT · 熊吼",
+    verb:["brummen","（熊）低吼 —— 低频、持续、含混"],
+    child:["Brummbär","（儿语/童话）爱嘟囔的熊"],
+    cn:"吼 / 哼",
+    note:"德语网络中 brummen 同时联结机器（Der Motor brummt 引擎低鸣）——同一节点跨域共享，这是隐喻映射的入口（见可视化 06）。",
+    bsp:["Der Bär brummt in seiner Höhle. / Der Motor brummt.","熊在洞里低吼。/ 引擎低鸣。"],
+    links:["brummen","Brummbär","Motor","mürrisch"]
+  },
+  katze:{
+    word:"miau", gloss:"DIE KATZE MIAUT · 猫叫",
+    verb:["miauen","（猫）喵喵叫"],
+    child:["Mieze / Miezekatze","（儿语爱称）小猫咪"],
+    cn:"喵",
+    note:"联结撒娇、索取、亲昵的情感色彩；schnurren（呼噜）是同一节点下的另一分支，表满足。",
+    bsp:["Die Katze miaut, weil sie Futter will.","猫喵喵叫，因为它想要吃的。"],
+    links:["miauen","Mieze","schnurren","Futter"]
+  },
+  schwein:{
+    word:"grunz", gloss:"DAS SCHWEIN GRUNZT · 猪哼",
+    verb:["grunzen","（猪）哼哼 —— 短促、喉音"],
+    child:["Grunz!","可直接作感叹词模仿"],
+    cn:"哼哼",
+    note:"联结满足、觅食、泥土的场景；日常语中 „grunzen“ 可戏谑形容人吃得香——语域受限（见可视化 08 语域警示）。",
+    bsp:["Die Schweine grunzen zufrieden im Stroh.","猪在草堆里满足地哼哼。"],
+    links:["grunzen","Grunz","zufrieden","Fressen"]
+  },
+  kraehe:{
+    word:"kra kra", gloss:"DIE KRÄHE KRÄCHZT · 鸦啼",
+    verb:["krächzen","（乌鸦）呱呱叫 —— 沙哑、刺耳"],
+    child:["Rabe / Krähe","童话与谚语中的常客"],
+    cn:"呱呱",
+    note:"联结不祥、粗糙、沙哑的声学特征；借喻人时 „krächzen“ = 嗓音沙哑地讲/唱（隐喻映射，见可视化 06 第④组）。",
+    bsp:["Die Krähe krächzt laut vom Dachfirst.","乌鸦在屋脊上呱呱叫。"],
+    links:["krächzen","heiser","Rabe","rau"]
+  }
+};
+
+const card=document.getElementById('detailCard');
+function show(key){
+  const d=DATA[key];if(!d)return;
+  document.querySelectorAll('.node').forEach(n=>n.classList.toggle('sel',n.dataset.n===key));
+  document.querySelectorAll('.edge').forEach(e=>e.classList.toggle('on',e.dataset.n===key));
+  const node=document.querySelector('.node[data-n="'+key+'"] .pulse');
+  if(node){node.classList.remove('go');void node.getBoundingClientRect();node.classList.add('go');}
+  card.innerHTML=
+    '<div class="dw">„'+d.word+'“</div>'+
+    '<div class="dg">'+d.gloss+'</div>'+
+    '<div class="drow"><span class="k">VERB · 动词</span><span class="v"><i>'+d.verb[0]+'</i> <span class="cn">'+d.verb[1]+'</span></span></div>'+
+    '<div class="drow"><span class="k">KINDERSPRACHE · 儿语</span><span class="v"><i>'+d.child[0]+'</i> <span class="cn">'+d.child[1]+'</span></span></div>'+
+    '<div class="drow"><span class="k">中文对应</span><span class="v">「'+d.cn+'」 <span class="cn">—— 音系已被各自语言「修剪」，不可互换</span></span></div>'+
+    '<div class="drow"><span class="k">NETZ-HINWEIS · 网络说明</span><span class="v">'+d.note+'</span></div>'+
+    '<div class="bsp"><span class="de-s">'+d.bsp[0]+'</span><span class="zh-s">'+d.bsp[1]+'</span></div>'+
+    '<div class="mini-net">'+d.links.map(l=>'<span>'+l+'</span>').join('')+'</div>';
+}
+document.querySelectorAll('.node').forEach(n=>{
+  if(n.dataset.n!=='hub')n.addEventListener('click',()=>show(n.dataset.n));
+});
+/* fade-in */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('section,.note').forEach(el=>{el.classList.add('fade');io.observe(el);});
+</script>
+</body>
+</html>

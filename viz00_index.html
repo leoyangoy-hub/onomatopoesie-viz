@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可视化索引 · 拟声词 Onomatopoesie — 破译大脑的声音密码</title>
+<style>
+:root{
+  --ink:#141413; --canvas:#f0eee6; --card:#faf9f5; --cloud:#b0aea5; --cloud-d:#87867f;
+  --stone:#cccbc8; --oat:#e3dacc; --manilla:#f5e3c7; --clay:#c6613f; --clay-2:#d97757;
+  --serif:Georgia,"Times New Roman","Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SF Mono",Consolas,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--serif);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(240,238,230,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--stone)}
+.topnav .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:14px;padding-top:6px;padding-bottom:6px;flex-wrap:wrap}
+.brand{font-family:var(--sans);font-size:11px;letter-spacing:.14em;color:var(--cloud-d);font-weight:600;text-transform:uppercase}
+.brand b{color:var(--clay);font-weight:700}
+.links{display:flex;gap:3px;flex-wrap:wrap}
+.links a{font-family:var(--sans);font-size:11px;color:var(--cloud-d);text-decoration:none;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.links a:hover{color:var(--ink);background:var(--oat)}
+.links a.on{background:var(--ink);color:var(--card)}
+.hero{padding:64px 0 34px;border-bottom:1px solid var(--stone)}
+.kicker{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--clay)}
+.hero h1{font-size:52px;font-weight:400;line-height:1.1;margin:16px 0 6px}
+.hero h1 .de{display:block;font-size:22px;color:var(--cloud-d);margin-top:10px;font-weight:400}
+.lead{font-size:16px;max-width:82ch;margin-top:16px}
+.lead em{font-style:normal;color:var(--clay);font-weight:600}
+.meta{display:flex;gap:22px;flex-wrap:wrap;margin-top:20px;font-family:var(--sans);font-size:11px;color:var(--cloud-d);letter-spacing:.08em}
+.meta span b{color:var(--ink)}
+section{padding:36px 0 6px}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:18px;border-bottom:1px solid var(--stone);padding-bottom:10px}
+.sec-num{font-size:26px;color:var(--cloud)}
+.sec-title{font-size:22px;font-weight:700}
+.sec-title .de{font-family:var(--sans);font-size:12px;color:var(--cloud-d);font-weight:500;margin-left:10px;letter-spacing:.06em}
+/* ---------- viz cards ---------- */
+.vgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+@media(max-width:860px){.vgrid{grid-template-columns:1fr}}
+.vcard{display:block;background:var(--card);border:1px solid var(--stone);border-radius:16px;padding:22px 24px;text-decoration:none;color:var(--ink);transition:all .28s;position:relative}
+.vcard:hover{border-color:var(--clay);transform:translateY(-3px);box-shadow:0 8px 24px rgba(20,20,19,.08)}
+.vcard .vno{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--cloud);transition:color .28s}
+.vcard:hover .vno{color:var(--clay)}
+.vcard .vt{font-size:18px;font-weight:700;margin:6px 0 2px}
+.vcard .vde{font-family:var(--sans);font-size:11px;color:var(--cloud-d);font-style:italic;letter-spacing:.04em}
+.vcard .vd{font-size:12.5px;margin-top:10px;line-height:1.6}
+.vcard .vtime{position:absolute;top:20px;right:20px;font-family:var(--mono);font-size:11px;color:var(--clay);background:var(--manilla);border-radius:8px;padding:3px 10px;font-weight:700}
+.vcard .vgo{display:inline-block;margin-top:12px;font-family:var(--sans);font-size:10.5px;font-weight:700;letter-spacing:.1em;color:var(--clay)}
+/* ---------- usage ---------- */
+.use{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:900px){.use{grid-template-columns:1fr}}
+.ucc{background:var(--card);border:1px solid var(--stone);border-radius:14px;padding:18px 20px}
+.ucc .no{font-family:var(--sans);font-size:10px;color:var(--cloud);font-weight:700;letter-spacing:.12em}
+.ucc .t{font-size:15px;font-weight:700;margin:4px 0 6px}
+.ucc .d{font-size:12.5px;line-height:1.6}
+/* ---------- timeline bar ---------- */
+.tlbar{margin-top:8px}
+.tl-track{position:relative;height:34px;background:var(--oat);border-radius:999px;overflow:hidden}
+.tl-seg{position:absolute;top:0;bottom:0;background:var(--manilla);border-right:2px solid var(--canvas);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9.5px;font-weight:700;color:var(--clay);transition:background .25s}
+.tl-seg:hover{background:var(--clay);color:#fff}
+.tl-lab{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--cloud-d);margin-top:6px}
+footer{border-top:1px solid var(--stone);margin-top:48px;padding:26px 0 44px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:10.5px;color:var(--cloud-d);letter-spacing:.08em}
+footer a{color:var(--clay);text-decoration:none}
+.fade{opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+.fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wrap">
+    <div class="brand">Onomatopoesie · Visualisierung <b>00 / 08</b></div>
+    <div class="links">
+      <a class="on" href="viz00_index.html">索引</a>
+      <a href="viz01_bouba-kiki.html">01 象似性</a>
+      <a href="viz02_crossmodal.html">02 跨模态</a>
+      <a href="viz03_artikulation.html">03 具身发音</a>
+      <a href="viz04_mentales-lexikon.html">04 心理词典</a>
+      <a href="viz05_reifikation.html">05 物化</a>
+      <a href="viz06_metapher.html">06 隐喻</a>
+      <a href="viz07_interjektion.html">07 感叹词习得</a>
+      <a href="viz08_didaktik.html">08 教学</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Visualisierungen · Gesamtübersicht · 可视化系列总览</div>
+    <h1>拟声词：破译大脑的声音密码
+      <span class="de">Onomatopoesie — Die Klangcodes des Gehirns entschlüsseln</span>
+    </h1>
+    <p class="lead">《现代德语词汇学》第五章第一节 · 10 分钟学术课题小汇报 · 配套交互可视化系列。<em>八个独立页面</em>对应汇报的八个理论环节——每个页面都是一个可现场演示的「微型实验室」。</p>
+    <div class="meta">
+      <span>规模 <b>8 个可视化 · 9 个页面</b></span>
+      <span>时长 <b>10 Minuten</b></span>
+      <span>语言 <b>中德双语</b></span>
+      <span>形式 <b>单文件 HTML · 浏览器直接打开</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ A. 八张卡 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">A</div><div class="sec-title">八个可视化 · 对应汇报时间码<span class="de">ACHT VISUALISIERUNGEN · MIT TIMECODES</span></div></div>
+  <div class="vgrid">
+
+    <a class="vcard" href="viz01_bouba-kiki.html">
+      <span class="vtime">0:40–1:40</span>
+      <div class="vno">01</div>
+      <div class="vt">Bouba/Kiki 象似性实验</div>
+      <div class="vde">Ikonizität · Saussure vs. Haiman</div>
+      <div class="vd">现场做 Bouba/Kiki 选择实验、95% 统计动画、波形与音素特征对比——论证语言符号并非完全任意。</div>
+      <span class="vgo">打开 → ÖFFNEN</span>
+    </a>
+
+    <a class="vcard" href="viz02_crossmodal.html">
+      <span class="vtime">1:40–2:40</span>
+      <div class="vno">02</div>
+      <div class="vt">跨模态感知 · 多感官激活</div>
+      <div class="vde">Crossmodale Wahrnehmung · Synästhesie</div>
+      <div class="vd">九个拟声词逐个点击，激活五感条与大脑区域——声音如何同时被「看见、摸到、尝到」。</div>
+      <span class="vgo">打开 → ÖFFNEN</span>
+    </a>
+
+    <a class="vcard" href="viz03_artikulation.html">
+      <span class="vtime">2:40–3:40</span>
+      <div class="vno">03</div>
+      <div class="vt">具身认知 · 发音器官模拟器</div>
+      <div class="vde">Embodiment · Barsalou (2008)</div>
+      <div class="vd">/ts/ /kn/ /mː/ 三个音素的声道横断动画：舌头、软腭、气流、声带振动随音素切换——身体如何「演出」声音。</div>
+      <span class="vgo">打开 → ÖFFNEN</span>
+    </a>
+
+    <a class="vcard" href="viz04_mentales-lexikon.html">
+      <span class="vtime">3:40–4:10</span>
+      <div class="vno">04</div>
+      <div class="vt">心理词典 · 语义网络与负迁移</div>
+      <div class="vde">Mentales Lexikon · Aitchison (2003)</div>
+      <div class="vd">可点击的动物叫声语义网络：点开 Hund/Hahn 看词条档案与激活扩散——为什么不能拿「汪汪」直译德语。</div>
+      <span class="vgo">打开 → ÖFFNEN</span>
+    </a>
+
+    <a class="vcard" href="viz05_reifikation.html">
+      <span class="vtime">4:10–5:10</span>
+      <div class="vno">05</div>
+      <div class="vt">词法化与物化</div>
+      <div class="vde">Grammatikalisierung &amp; Reifikation · Hopper &amp; Traugott (2003)</div>
+      <div class="vd">可播放的三段流水线：bellen → Ge- 前缀「打包」→ das Gebelle——事件如何被封装成可谈论的「物」，附汉德对比。</div>
+      <span class="vgo">打开 → ÖFFNEN</span>
+    </a>
+
+    <a class="vcard" href="viz06_metapher.html">
+      <span class="vtime">6:10–7:10</span>
+      <div class="vno">06</div>
+      <div class="vt">概念隐喻 · 跨域映射泳道</div>
+      <div class="vde">Konzeptuelle Metapher · Lakoff &amp; Johnson (1980)</div>
+      <div class="vd">四条动物→人的映射泳道，点击陶土箭头播放特征粒子流——bellen→anbrüllen，brummen→murren……</div>
+      <span class="vgo">打开 → ÖFFNEN</span>
+    </a>
+
+    <a class="vcard" href="viz07_interjektion.html">
+      <span class="vtime">8:10–9:00</span>
+      <div class="vno">07</div>
+      <div class="vt">感叹词与儿童习得</div>
+      <div class="vde">Interjektionen &amp; Spracherwerb · Piaget · 边缘系统</div>
+      <div class="vd">三模块切换：符号游戏（Wauwau 是第一批词）、边缘系统（Ach!/Au! 泄压阀）、从声音到概念——附习得时间线。</div>
+      <span class="vgo">打开 → ÖFFNEN</span>
+    </a>
+
+    <a class="vcard" href="viz08_didaktik.html">
+      <span class="vtime">9:00–9:40</span>
+      <div class="vno">08</div>
+      <div class="vt">教学启示 · 方法×理论矩阵</div>
+      <div class="vde">Didaktische Implikationen · 3×3 Matrix</div>
+      <div class="vd">3 种方法 × 3 个理论的可点矩阵 + 语域警示（brüllen/flüstern 不可滥用）——把理论搬回课堂。</div>
+      <span class="vgo">打开 → ÖFFNEN</span>
+    </a>
+
+  </div>
+</section>
+
+<!-- ============ B. 汇报时间条 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">B</div><div class="sec-title">10 分钟汇报动线<span class="de">ZEITPLAN · 10 MINUTEN</span></div></div>
+  <div class="card" style="padding:22px 26px">
+    <div class="tlbar">
+      <div class="tl-track">
+        <a class="tl-seg" style="left:6.7%;width:16.7%" href="viz01_bouba-kiki.html">01</a>
+        <a class="tl-seg" style="left:23.4%;width:16.7%" href="viz02_crossmodal.html">02</a>
+        <a class="tl-seg" style="left:40.1%;width:16.7%" href="viz03_artikulation.html">03</a>
+        <a class="tl-seg" style="left:56.8%;width:8.3%" href="viz04_mentales-lexikon.html">04</a>
+        <a class="tl-seg" style="left:65.1%;width:16.7%" href="viz05_reifikation.html">05</a>
+        <a class="tl-seg" style="left:81.8%;width:16.7%" href="viz06_metapher.html">06</a>
+      </div>
+      <div class="tl-lab"><span>0:00 开场</span><span>4:10 物化</span><span>7:10 习得/教学 → 07/08 见卡片</span><span>10:00 结语</span></div>
+    </div>
+    <p style="font-size:12px;color:var(--cloud-d);margin-top:12px">注：07（8:10–9:00）与 08（9:00–9:40）位于汇报末段，时间条空间受限，请直接从上方卡片打开。点击时间条色块可跳转对应可视化。</p>
+  </div>
+</section>
+
+<!-- ============ C. 使用建议 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">C</div><div class="sec-title">使用建议<span class="de">EINSATZEMPFEHLUNG</span></div></div>
+  <div class="use">
+    <div class="ucc">
+      <div class="no">TIPP 01</div>
+      <div class="t">汇报前：预开标签页</div>
+      <div class="d">按 01 → 08 顺序在浏览器中预先打开八个标签页，汇报时随讲随切，避免现场找文件。每页顶部导航条也可直接互跳。</div>
+    </div>
+    <div class="ucc">
+      <div class="no">TIPP 02</div>
+      <div class="t">汇报中：先演示，后讲解</div>
+      <div class="d">每页的核心交互（实验、模拟器、网络、流水线、泳道）都可现场操作——先让观众「玩」五秒，再讲理论，注意力最集中。</div>
+    </div>
+    <div class="ucc">
+      <div class="no">TIPP 03</div>
+      <div class="t">讲者提示：页底米黄卡</div>
+      <div class="d">每页底部的 SPRECHNOTIZ 米黄色卡片印有对应时间码与口头讲解词，与 PPT 备注页、讲稿逐字稿三者同步。</div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>拟声词 · ONOMATOPOESIE —— 破译大脑的声音密码 ｜ 《现代德语词汇学》第五章第一节 · 学术课题小汇报</span>
+    <span>索引 ｜ 第一页：<a href="viz01_bouba-kiki.html">01 象似性 →</a></span>
+  </div>
+</footer>
+
+<script>
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('section').forEach(el=>{el.classList.add('fade');io.observe(el);});
+</script>
+</body>
+</html>

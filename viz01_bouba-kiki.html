@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可视化 01 · Bouba/Kiki 象似性实验 — 拟声词 Onomatopoesie</title>
+<style>
+:root{
+  --ink:#141413; --canvas:#f0eee6; --card:#faf9f5; --cloud:#b0aea5; --cloud-d:#87867f;
+  --stone:#cccbc8; --oat:#e3dacc; --manilla:#f5e3c7; --clay:#c6613f; --clay-2:#d97757;
+  --serif:Georgia,"Times New Roman","Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SF Mono",Consolas,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--serif);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+/* ---------- top nav ---------- */
+.topnav{position:sticky;top:0;z-index:100;background:rgba(240,238,230,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--stone)}
+.topnav .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:14px;padding-top:6px;padding-bottom:6px;flex-wrap:wrap}
+.brand{font-family:var(--sans);font-size:11px;letter-spacing:.14em;color:var(--cloud-d);font-weight:600;text-transform:uppercase}
+.brand b{color:var(--clay);font-weight:700}
+.links{display:flex;gap:3px;flex-wrap:wrap}
+.links a{font-family:var(--sans);font-size:11px;color:var(--cloud-d);text-decoration:none;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.links a:hover{color:var(--ink);background:var(--oat)}
+.links a.on{background:var(--ink);color:var(--card)}
+/* ---------- hero ---------- */
+.hero{padding:58px 0 30px;border-bottom:1px solid var(--stone)}
+.kicker{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--clay)}
+.hero h1{font-size:46px;font-weight:400;line-height:1.12;margin:16px 0 6px}
+.hero h1 .de{display:block;font-size:22px;color:var(--cloud-d);margin-top:8px;font-weight:400}
+.lead{font-size:16px;max-width:80ch;margin-top:16px}
+.lead em{font-style:normal;color:var(--clay);font-weight:600}
+/* ---------- sections ---------- */
+section{padding:34px 0 6px}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:18px;border-bottom:1px solid var(--stone);padding-bottom:10px}
+.sec-num{font-size:26px;color:var(--cloud)}
+.sec-title{font-size:22px;font-weight:700}
+.sec-title .de{font-family:var(--sans);font-size:12px;color:var(--cloud-d);font-weight:500;margin-left:10px;letter-spacing:.06em}
+.card{background:var(--card);border:1px solid var(--stone);border-radius:16px;padding:24px 26px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:860px){.grid-2{grid-template-columns:1fr}}
+h3.ct{font-size:17px;font-weight:700}
+h3.ct .de{font-family:var(--sans);font-size:11.5px;color:var(--cloud-d);font-weight:500;margin-left:8px;font-style:italic}
+.card p{font-size:13.5px;margin-top:10px}
+.ph{font-family:var(--mono);color:var(--clay);font-weight:700}
+/* ---------- continuum ---------- */
+.cont{margin-top:20px}
+.cont-bar{position:relative;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--cloud) 0%,var(--oat) 55%,var(--clay) 100%);margin:26px 6px 8px}
+.cont-lab{display:flex;justify-content:space-between;font-family:var(--sans);font-size:11px;color:var(--cloud-d);letter-spacing:.05em}
+.cont-tick{position:absolute;top:-9px;transform:translateX(-50%);text-align:center}
+.cont-tick i{display:block;width:2px;height:28px;background:var(--ink);margin:0 auto}
+.cont-tick span{display:block;font-family:var(--sans);font-size:10.5px;color:var(--ink);background:var(--card);border:1px solid var(--stone);border-radius:8px;padding:2px 8px;margin-top:4px;white-space:nowrap}
+/* ---------- experiment ---------- */
+.exp-stage{display:grid;grid-template-columns:1fr 1fr 300px;gap:20px;align-items:stretch}
+@media(max-width:1020px){.exp-stage{grid-template-columns:1fr 1fr}.exp-side{grid-column:1/-1}}
+@media(max-width:640px){.exp-stage{grid-template-columns:1fr}}
+.shape-card{text-align:center;display:flex;flex-direction:column}
+.shape-card svg{width:100%;max-width:250px;height:auto;margin:6px auto 0}
+.shape-name{font-size:13px;color:var(--cloud-d);font-family:var(--sans);letter-spacing:.08em;margin-top:4px}
+.btn-row{display:flex;gap:10px;justify-content:center;margin-top:14px}
+button.pick{font-family:var(--sans);font-size:12.5px;font-weight:600;border:1px solid var(--ink);background:transparent;color:var(--ink);
+  border-radius:999px;padding:8px 18px;cursor:pointer;transition:all .25s}
+button.pick:hover{background:var(--ink);color:var(--card)}
+button.pick.sel{background:var(--clay);border-color:var(--clay);color:#fff}
+.exp-side{display:flex;flex-direction:column;gap:14px}
+.verdict{background:var(--manilla);border-radius:14px;padding:16px 18px;font-size:13px;min-height:86px}
+.verdict .vt{font-family:var(--sans);font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:700;margin-bottom:6px}
+.stat{background:var(--card);border:1px solid var(--stone);border-radius:14px;padding:14px 18px}
+.stat .row{margin:8px 0}
+.stat .lab{display:flex;justify-content:space-between;font-family:var(--sans);font-size:11px;color:var(--cloud-d);margin-bottom:4px}
+.stat .lab b{color:var(--ink)}
+.bar{height:12px;background:var(--oat);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--clay);border-radius:999px;transition:width 1.1s cubic-bezier(.2,.7,.2,1)}
+.bar.ghost i{background:var(--cloud)}
+/* ---------- waveform ---------- */
+.wave-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:860px){.wave-grid{grid-template-columns:1fr}}
+.wave-card svg{width:100%;height:110px;display:block;background:var(--canvas);border:1px solid var(--stone);border-radius:12px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{font-family:var(--mono);font-size:13px;background:var(--oat);border-radius:8px;padding:5px 12px}
+.chip b{color:var(--clay)}
+.play{font-family:var(--sans);font-size:12px;font-weight:600;border:1px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--card);
+  padding:8px 20px;cursor:pointer;transition:all .25s}
+.play:hover{background:var(--clay);border-color:var(--clay)}
+.wpath{fill:none;stroke:var(--clay);stroke-width:2.4;stroke-linecap:round}
+/* ---------- feature table ---------- */
+table.feat{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border:1px solid var(--stone);border-radius:14px;overflow:hidden}
+table.feat th{font-family:var(--sans);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);background:var(--oat);text-align:left;padding:10px 14px}
+table.feat td{padding:9px 14px;border-top:1px solid var(--stone);vertical-align:top}
+table.feat tr:nth-child(even) td{background:var(--canvas)}
+td .ph{font-size:13px}
+.pill{display:inline-block;font-family:var(--sans);font-size:10px;border-radius:999px;padding:2px 9px;margin-right:5px;background:var(--manilla)}
+.pill.b{background:var(--oat)}
+/* ---------- timeline ---------- */
+.tl{position:relative;margin-top:10px;padding-left:26px}
+.tl:before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--stone)}
+.tl-item{position:relative;padding:0 0 22px 16px}
+.tl-item:before{content:"";position:absolute;left:-25px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--card);border:3px solid var(--clay)}
+.tl-item .yr{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--clay);letter-spacing:.06em}
+.tl-item .tt{font-size:15px;font-weight:700;margin:2px 0}
+.tl-item .ds{font-size:12.5px;color:var(--ink);max-width:90ch}
+/* ---------- speaker note ---------- */
+.note{margin:26px 0 8px;background:var(--manilla);border-radius:14px;padding:18px 22px}
+.note .tag{font-family:var(--sans);font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:700;display:block;margin-bottom:8px}
+.note p{font-size:13.5px;line-height:1.7}
+/* ---------- gallery ---------- */
+.gal{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media(max-width:860px){.gal{grid-template-columns:1fr}}
+.gal .card{padding:18px 20px}
+.gal .w{font-size:19px;font-weight:700;font-style:italic}
+.gal .g{font-family:var(--sans);font-size:11px;color:var(--clay);font-weight:600;margin:2px 0 8px}
+.gal .d{font-size:12.5px}
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--stone);margin-top:48px;padding:26px 0 44px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:10.5px;color:var(--cloud-d);letter-spacing:.08em}
+footer a{color:var(--clay);text-decoration:none}
+.fade{opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+.fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wrap">
+    <div class="brand">Onomatopoesie · Visualisierung <b>01 / 08</b></div>
+    <div class="links">
+      <a href="viz00_index.html">索引</a>
+      <a class="on" href="viz01_bouba-kiki.html">01 象似性</a>
+      <a href="viz02_crossmodal.html">02 跨模态</a>
+      <a href="viz03_artikulation.html">03 具身发音</a>
+      <a href="viz04_mentales-lexikon.html">04 心理词典</a>
+      <a href="viz05_reifikation.html">05 物化</a>
+      <a href="viz06_metapher.html">06 隐喻</a>
+      <a href="viz07_interjektion.html">07 感叹词习得</a>
+      <a href="viz08_didaktik.html">08 教学</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Visualisierung 01 · Ikonizität vs. Arbitrarität · 象似性实验</div>
+    <h1>Bouba 还是 Kiki？
+      <span class="de">声音天生有形状 —— Der Bouba-Kiki-Effekt（Ramachandran &amp; Hubbard 2001）</span>
+    </h1>
+    <p class="lead">索绪尔说语言符号是<em>任意</em>的；可当你看到下面两个图形时，几乎不需要思考就能把名字配上去——这就是拟声词站在其上的那条裂缝：<em>语音可以直接临摹世界</em>。本页可交互复现这个经典实验，并拆解它背后的发音机制与学术史。</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ A. 理论冲突 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">A</div><div class="sec-title">先有一场理论冲突<span class="de">ARBITRARITÄT × IKONIZITÄT</span></div></div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 class="ct">任意性<span class="de">Arbitrarität · Saussure (1916)</span></h3>
+      <p>能指（Signifikant）与所指（Signifikat）的关系是<b>任意的（arbiträr）</b>：法语 <i>arbre</i> 与「树」之间没有天然联系，纯属语言社团的约定俗成。这是 20 世纪语言学的第一条铁律。</p>
+    </div>
+    <div class="card">
+      <h3 class="ct">象似性<span class="de">Ikonizität · Haiman (1985)</span></h3>
+      <p>拟声词打破铁律：语音<b>直接临摹</b>外界声音（abbildende Ikonizität）。德语佐证：<i>zischen</i> 的 <span class="ph">/ts/</span>、<i>knistern</i> 的 <span class="ph">/kn/</span>——发音器官直接模拟物理摩擦感。</p>
+    </div>
+  </div>
+  <div class="card cont">
+    <h3 class="ct">语言符号不是非黑即白，而是连续统<span class="de">KONTINUUM</span></h3>
+    <div class="cont-bar" id="contBar">
+      <div class="cont-tick" style="left:6%"><i></i><span>arbre / 树<br>纯任意</span></div>
+      <div class="cont-tick" style="left:38%"><i></i><span>隐喻词<br>die Wurzel des Problems</span></div>
+      <div class="cont-tick" style="left:70%"><i></i><span>感叹词<br>Ach! Au!</span></div>
+      <div class="cont-tick" style="left:94%"><i></i><span>拟声词<br>wau wau · kikeriki</span></div>
+    </div>
+    <div class="cont-lab"><span>← 最任意 ARBITRÄR</span><span>最象似 IKONISCH →</span></div>
+    <p style="margin-top:16px">拟声词站在连续统<b>最象似的一端</b>——所以这一节教材的本质问题才成立：<i>Wie kodiert das Gehirn Lautnachahmung?</i>（大脑如何对外界声音进行认知编码？）</p>
+  </div>
+</section>
+
+<!-- ============ B. 交互实验 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">B</div><div class="sec-title">亲手做一次实验<span class="de">DAS EXPERIMENT · 请观众一起参与</span></div></div>
+  <div class="exp-stage">
+    <div class="card shape-card">
+      <svg id="svgBlob" viewBox="0 0 240 240"></svg>
+      <div class="shape-name">图形 A · FORM A</div>
+      <div class="btn-row">
+        <button class="pick" data-shape="A" data-name="bouba">这是 Bouba</button>
+        <button class="pick" data-shape="A" data-name="kiki">这是 Kiki</button>
+      </div>
+    </div>
+    <div class="card shape-card">
+      <svg id="svgStar" viewBox="0 0 240 240"></svg>
+      <div class="shape-name">图形 B · FORM B</div>
+      <div class="btn-row">
+        <button class="pick" data-shape="B" data-name="bouba">这是 Bouba</button>
+        <button class="pick" data-shape="B" data-name="kiki">这是 Kiki</button>
+      </div>
+    </div>
+    <div class="exp-side">
+      <div class="verdict" id="verdict">
+        <div class="vt">ERGEBNIS · 判定</div>
+        <div id="verdictText">先凭直觉点击上方按钮做出选择——别想太久，第一感觉最准。</div>
+      </div>
+      <div class="stat">
+        <div class="vt" style="font-family:var(--sans);font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:700">跨语言受试者统计 · N≥95%</div>
+        <div class="row">
+          <div class="lab"><span>圆图形 → <b>Bouba</b></span><b id="pct1">0%</b></div>
+          <div class="bar"><i id="bar1"></i></div>
+        </div>
+        <div class="row">
+          <div class="lab"><span>尖图形 → <b>Kiki</b></span><b id="pct2">0%</b></div>
+          <div class="bar"><i id="bar2"></i></div>
+        </div>
+        <div class="row">
+          <div class="lab"><span>相反配对（少数派）</span><b id="pct3">0%</b></div>
+          <div class="bar ghost"><i id="bar3"></i></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="note">
+    <span class="tag">为什么几乎人人答对？· LAUTSYMBOLIK</span>
+    <p>发 <b>Bouba</b> 时双唇圆拢、气流顺畅（唇圆声柔 → 圆润图形）；发 <b>Kiki</b> 时舌位高而前、气流被硬腭阻断（受阻破裂 → 尖锐图形）。这种<b>语音象征（Lautsymbolik / Sound Symbolism）</b>具有普遍的神经生物学基础：听觉皮层与视觉形状加工区之间存在跨模态的自动联结——这正是下一页「跨模态感知」要展开的。</p>
+  </div>
+</section>
+
+<!-- ============ C. 机制：波形与音素 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">C</div><div class="sec-title">机制拆解：看声音的「形状」<span class="de">WELLENFORM &amp; PHONEME</span></div></div>
+  <div style="margin-bottom:14px"><button class="play" id="playWaves">▶ 播放波形对比 · Wellenform abspielen</button></div>
+  <div class="wave-grid">
+    <div class="card wave-card">
+      <h3 class="ct">Bouba<span class="de">/buːbə/ · 平滑低频</span></h3>
+      <svg viewBox="0 0 400 110" preserveAspectRatio="none"><path class="wpath" id="waveB" d=""/></svg>
+      <div class="chips"><span class="chip"><b>/b/</b> 浊双唇塞音·柔和起始</span><span class="chip"><b>/uː/</b> 圆唇后元音·共鸣腔大</span><span class="chip"><b>/b/</b></span><span class="chip"><b>/ə/</b> 中央元音·无棱角</span></div>
+    </div>
+    <div class="card wave-card">
+      <h3 class="ct">Kiki<span class="de">/kiki/ · 急促高频</span></h3>
+      <svg viewBox="0 0 400 110" preserveAspectRatio="none"><path class="wpath" id="waveK" d=""/></svg>
+      <div class="chips"><span class="chip"><b>/k/</b> 清软腭塞音·气流阻断</span><span class="chip"><b>/i/</b> 高前元音·舌位最高</span><span class="chip"><b>/k/</b></span><span class="chip"><b>/i/</b></span></div>
+    </div>
+  </div>
+  <div style="height:20px"></div>
+  <table class="feat">
+    <tr><th>音素 Phonem</th><th>类型 Typ</th><th>发音特征 Artikulation</th><th>感知联想 Assoziation</th></tr>
+    <tr><td><span class="ph">/b/</span></td><td><span class="pill">浊塞音</span></td><td>双唇闭合后柔和释放，声带振动</td><td>饱满、钝、圆</td></tr>
+    <tr><td><span class="ph">/m/</span> <span class="ph">/l/</span></td><td><span class="pill">响音</span></td><td>气流持续无阻断（鼻音/边音）</td><td>柔软、流动（maluma）</td></tr>
+    <tr><td><span class="ph">/uː/</span> <span class="ph">/a/</span></td><td><span class="pill">后/低元音</span></td><td>口腔共鸣腔大、开口度大</td><td>大、圆、暗</td></tr>
+    <tr><td><span class="ph">/k/</span> <span class="ph">/t/</span></td><td><span class="pill b">清塞音</span></td><td>软腭/齿龈完全阻断气流，爆发释放</td><td>硬、尖、脆（takete）</td></tr>
+    <tr><td><span class="ph">/i/</span></td><td><span class="pill b">高前元音</span></td><td>舌位最高最前，共鸣腔小</td><td>小、细、锐利</td></tr>
+  </table>
+</section>
+
+<!-- ============ D. 学术史时间线 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">D</div><div class="sec-title">这场实验的学术坐标<span class="de">FORSCHUNGSGESCHICHTE</span></div></div>
+  <div class="card">
+    <div class="tl">
+      <div class="tl-item"><div class="yr">1916</div><div class="tt">Saussure · 任意性原则确立</div><div class="ds"><i>Course in General Linguistics</i>：能指与所指关系任意（l'arbitraire du signe）——铁律确立，象似性被边缘化。</div></div>
+      <div class="tl-item"><div class="yr">1929</div><div class="tt">Wolfgang Köhler · Maluma / Takete</div><div class="ds">格式塔心理学家首次用无意义词配对图形：受试者一致把圆润图形叫 <i>maluma</i>、尖锐图形叫 <i>takete</i>——Bouba/Kiki 的前身。</div></div>
+      <div class="tl-item"><div class="yr">1985</div><div class="tt">Haiman · 象似性系统化</div><div class="ds"><i>Natural Syntax</i> 区分 abbildende（临摹式）与 diagrammatische（图式式）象似性，拟声词属于前者。</div></div>
+      <div class="tl-item"><div class="yr">2001</div><div class="tt">Ramachandran &amp; Hubbard · Bouba / Kiki</div><div class="ds">跨语言受试者 95%+ 一致配对，提出听觉—视觉跨模态联结的神经基础，语音象征重回主流视野。</div></div>
+      <div class="tl-item"><div class="yr">2000s+</div><div class="tt">跨文化与发展证据</div><div class="ds">后续研究在幼儿与不同语言社团中重复验证该效应——声音象征先于语言约定，是拟声词可被「秒懂」的原因。</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ E. 德语声音象征回链 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">E</div><div class="sec-title">回到德语教材：声音象征就在词里<span class="de">LAUTSYMBOLIK IM DEUTSCHEN</span></div></div>
+  <div class="gal">
+    <div class="card"><div class="w">zischen</div><div class="g">咝咝声 · <span class="ph">/ts/</span></div><div class="d">塞擦音的窄缝摩擦直接模拟摩擦声——发音即象似。详见 <a href="viz03_artikulation.html" style="color:var(--clay)">可视化 03 · 发音器官</a>。</div></div>
+    <div class="card"><div class="w">knistern</div><div class="g">雪沙沙响 · <span class="ph">/kn/</span></div><div class="d">破裂＋鼻音的快速交替模拟颗粒碎裂感，同时点亮听觉、触觉与视觉。详见 <a href="viz02_crossmodal.html" style="color:var(--clay)">可视化 02 · 跨模态</a>。</div></div>
+    <div class="card"><div class="w">brummen</div><div class="g">低沉吼 · <span class="ph">/mː/</span></div><div class="d">双唇鼻音延长共鸣模拟低频振动——胸腔就是共鸣箱。详见 <a href="viz03_artikulation.html" style="color:var(--clay)">可视化 03</a>。</div></div>
+  </div>
+</section>
+
+<!-- ============ 讲者提示 ============ -->
+<div class="note">
+  <span class="tag">SPRECHNOTIZ · 讲者提示（对应汇报 0:40–1:40 · 第 3 页幻灯）</span>
+  <p>索绪尔告诉我们，能指和所指的关系是任意的——arbre 和「树」没有天然联系。但拟声词打破了这条铁律。现场可让听众在 B 区亲手点一次：95% 以上的人将圆润图形配 Bouba、尖锐图形配 Kiki。机制：发 Bouba 唇圆声柔，发 Kiki 舌位高、气流受阻。语言符号呈连续统分布，拟声词在最象似的一端——所以本节本质问题是：<i>Wie kodiert das Gehirn Lautnachahmung?</i></p>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>拟声词 · ONOMATOPOESIE —— 破译大脑的声音密码 ｜ 《现代德语词汇学》第五章第一节 · 学术课题小汇报</span>
+    <span><a href="viz00_index.html">← 返回可视化索引</a> ｜ 下一页：<a href="viz02_crossmodal.html">02 跨模态感知 →</a></span>
+  </div>
+</footer>
+
+<script>
+/* ---------- shapes ---------- */
+function blobPath(cx,cy,r,amp,freq,n){
+  n=n||160; let d="";
+  for(let i=0;i<=n;i++){
+    const t=i/n*2*Math.PI;
+    const rr=r*(1+amp*Math.sin(freq*t+1.3)+0.5*amp*Math.sin(2*freq*t));
+    d+=(i===0?"M":"L")+(cx+rr*Math.cos(t)).toFixed(1)+","+(cy+rr*Math.sin(t)).toFixed(1);
+  }
+  return d+"Z";
+}
+function starPath(cx,cy,rO,rI,spikes){
+  let d="";
+  for(let i=0;i<spikes*2;i++){
+    const t=-Math.PI/2+i*Math.PI/spikes;
+    const rr=(i%2===0)?rO:rI;
+    d+=(i===0?"M":"L")+(cx+rr*Math.cos(t)).toFixed(1)+","+(cy+rr*Math.sin(t)).toFixed(1);
+  }
+  return d+"Z";
+}
+document.getElementById('svgBlob').innerHTML=
+  '<path d="'+blobPath(120,122,86,0.07,3)+'" fill="#f5e3c7" stroke="#141413" stroke-width="2.5"/>';
+document.getElementById('svgStar').innerHTML=
+  '<path d="'+starPath(120,122,104,58,9)+'" fill="#e3dacc" stroke="#141413" stroke-width="2.5"/>';
+
+/* ---------- experiment ---------- */
+const picks={A:null,B:null};
+const vt=document.getElementById('verdictText');
+let revealed=false;
+document.querySelectorAll('button.pick').forEach(b=>{
+  b.addEventListener('click',()=>{
+    picks[b.dataset.shape]=b.dataset.name;
+    document.querySelectorAll('button.pick[data-shape="'+b.dataset.shape+'"]').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+    if(picks.A&&picks.B) judge();
+  });
+});
+function judge(){
+  const boubaRight=(picks.A==='bouba'), kikiRight=(picks.B==='kiki');
+  if(picks.A===picks.B){
+    vt.innerHTML='两个图形不能都叫 <b>'+picks.A+'</b> 哦——实验要求一名配一形，再想想另一个叫什么？';
+    return;
+  }
+  if(boubaRight&&kikiRight){
+    vt.innerHTML='✓ 与全球 <b>95%+</b> 受试者一致！圆=Bouba，尖=Kiki。你的大脑也内置了<b>语音象征</b>。';
+  }else{
+    vt.innerHTML='有趣的少数派选择！跨语言统计中只有约 <b>5%</b> 的人这样配对——个体差异正说明这是<b>倾向</b>而非规则。';
+  }
+  if(!revealed){revealed=true;setTimeout(showStats,250);}
+}
+function showStats(){
+  animBar('bar1','pct1',95);animBar('bar2','pct2',95);animBar('bar3','pct3',5);
+}
+function animBar(barId,pctId,target){
+  const bar=document.getElementById(barId),lab=document.getElementById(pctId);
+  bar.style.width=target+'%';
+  let v=0;const t0=performance.now();
+  (function tick(t){
+    const p=Math.min(1,(t-t0)/1100);
+    v=Math.round(target*(1-Math.pow(1-p,3)));
+    lab.textContent=v+'%';
+    if(p<1)requestAnimationFrame(tick);
+  })(t0);
+}
+
+/* ---------- waves ---------- */
+function waveD(kind){
+  let d="M0,55";
+  for(let x=0;x<=400;x+=2){
+    let y;
+    if(kind==='b'){
+      y=55-30*Math.sin(x/52)*Math.sin(x/400*Math.PI);
+    }else{
+      const s=Math.sign(Math.sin(x/11))*1;
+      y=55-(26*s*Math.sin(x/400*Math.PI)+6*Math.sin(x/5));
+    }
+    d+="L"+x+","+y.toFixed(1);
+  }
+  return d;
+}
+const wB=document.getElementById('waveB'),wK=document.getElementById('waveK');
+wB.setAttribute('d',waveD('b'));wK.setAttribute('d',waveD('k'));
+function prepDash(p){const L=p.getTotalLength();p.style.strokeDasharray=L;p.style.strokeDashoffset=L;}
+prepDash(wB);prepDash(wK);
+document.getElementById('playWaves').addEventListener('click',()=>{
+  [wB,wK].forEach(p=>{p.style.transition='none';p.style.strokeDashoffset=p.getTotalLength();});
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    [wB,wK].forEach(p=>{p.style.transition='stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1)';p.style.strokeDashoffset=0;});
+  }));
+});
+
+/* ---------- fade-in on scroll ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('section,.note').forEach(el=>{el.classList.add('fade');io.observe(el);});
+</script>
+</body>
+</html>

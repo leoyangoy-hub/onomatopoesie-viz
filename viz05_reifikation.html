@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可视化 05 · 词法化与物化 — bellen → das Gebelle — 拟声词 Onomatopoesie</title>
+<style>
+:root{
+  --ink:#141413; --canvas:#f0eee6; --card:#faf9f5; --cloud:#b0aea5; --cloud-d:#87867f;
+  --stone:#cccbc8; --oat:#e3dacc; --manilla:#f5e3c7; --clay:#c6613f; --clay-2:#d97757;
+  --serif:Georgia,"Times New Roman","Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SF Mono",Consolas,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--serif);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(240,238,230,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--stone)}
+.topnav .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:14px;padding-top:6px;padding-bottom:6px;flex-wrap:wrap}
+.brand{font-family:var(--sans);font-size:11px;letter-spacing:.14em;color:var(--cloud-d);font-weight:600;text-transform:uppercase}
+.brand b{color:var(--clay);font-weight:700}
+.links{display:flex;gap:3px;flex-wrap:wrap}
+.links a{font-family:var(--sans);font-size:11px;color:var(--cloud-d);text-decoration:none;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.links a:hover{color:var(--ink);background:var(--oat)}
+.links a.on{background:var(--ink);color:var(--card)}
+.hero{padding:58px 0 30px;border-bottom:1px solid var(--stone)}
+.kicker{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--clay)}
+.hero h1{font-size:46px;font-weight:400;line-height:1.12;margin:16px 0 6px}
+.hero h1 .de{display:block;font-size:22px;color:var(--cloud-d);margin-top:8px;font-weight:400}
+.lead{font-size:16px;max-width:80ch;margin-top:16px}
+.lead em{font-style:normal;color:var(--clay);font-weight:600}
+section{padding:34px 0 6px}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:18px;border-bottom:1px solid var(--stone);padding-bottom:10px}
+.sec-num{font-size:26px;color:var(--cloud)}
+.sec-title{font-size:22px;font-weight:700}
+.sec-title .de{font-family:var(--sans);font-size:12px;color:var(--cloud-d);font-weight:500;margin-left:10px;letter-spacing:.06em}
+.card{background:var(--card);border:1px solid var(--stone);border-radius:16px;padding:24px 26px}
+h3.ct{font-size:17px;font-weight:700}
+h3.ct .de{font-family:var(--sans);font-size:11.5px;color:var(--cloud-d);font-weight:500;margin-left:8px;font-style:italic}
+.card p{font-size:13.5px;margin-top:10px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:860px){.grid-2{grid-template-columns:1fr}}
+/* ---------- pipeline ---------- */
+.pipe{display:grid;grid-template-columns:1fr 92px 1fr 92px 1fr;gap:0;align-items:stretch}
+@media(max-width:900px){.pipe{grid-template-columns:1fr}.pipe .p-arr{transform:rotate(90deg);height:56px}}
+.stage{background:var(--card);border:2px solid var(--stone);border-radius:16px;padding:20px 18px;text-align:center;transition:all .5s;opacity:.35}
+.stage.on{opacity:1;border-color:var(--clay);background:var(--manilla)}
+.stage .cat{font-family:var(--sans);font-size:9.5px;letter-spacing:.16em;color:var(--cloud-d);font-weight:700}
+.stage.on .cat{color:var(--clay)}
+.stage .big{font-size:26px;font-weight:700;font-style:italic;margin:8px 0 4px}
+.stage .pos{font-family:var(--sans);font-size:11px;color:var(--ink);font-weight:700}
+.stage .ds{font-size:11.5px;margin-top:10px;line-height:1.55;color:var(--ink)}
+.p-arr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;opacity:.3;transition:opacity .5s}
+.p-arr.on{opacity:1}
+.p-arr .glyph{font-size:30px;color:var(--clay);font-family:var(--sans);font-weight:700}
+.p-arr .lab{font-family:var(--sans);font-size:9px;letter-spacing:.08em;color:var(--clay);font-weight:700;text-align:center;line-height:1.3}
+.playrow{display:flex;gap:12px;justify-content:center;margin-top:18px}
+.playbtn{font-family:var(--sans);font-size:12px;font-weight:600;border:1px solid var(--ink);border-radius:999px;background:var(--ink);color:var(--card);padding:8px 22px;cursor:pointer;transition:all .25s}
+.playbtn:hover{background:var(--clay);border-color:var(--clay)}
+.playbtn.ghost{background:transparent;color:var(--ink)}
+.playbtn.ghost:hover{background:var(--ink);color:var(--card)}
+.pipe-note{margin-top:14px;text-align:center;font-size:12.5px;color:var(--cloud-d);min-height:40px}
+/* ---------- chips ---------- */
+.chipbox{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:980px){.chipbox{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.chipbox{grid-template-columns:1fr}}
+.chipc{background:var(--card);border:1px solid var(--stone);border-radius:14px;padding:16px 18px;transition:all .25s}
+.chipc:hover{border-color:var(--clay);transform:translateY(-2px)}
+.chipc .w{font-size:18px;font-weight:700;font-style:italic}
+.chipc .g{font-family:var(--sans);font-size:10px;color:var(--clay);font-weight:700;letter-spacing:.08em;margin:2px 0 8px}
+.chipc .d{font-size:12.5px}
+.chipc .pej{display:inline-block;font-family:var(--sans);font-size:9px;letter-spacing:.1em;background:var(--oat);border-radius:999px;padding:2px 9px;margin-top:10px;color:var(--cloud-d);font-weight:700}
+.chipc .pej b{color:#a03d2a}
+/* ---------- caps examples ---------- */
+.caps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:860px){.caps{grid-template-columns:1fr}}
+.cap{background:var(--ink);color:var(--card);border-radius:14px;padding:20px 22px;text-align:center}
+.cap .w{font-size:24px;font-weight:700;font-style:italic;color:var(--manilla)}
+.cap .d{font-family:var(--sans);font-size:11px;color:var(--cloud);margin-top:6px}
+/* ---------- compare ---------- */
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:860px){.cmp{grid-template-columns:1fr}}
+.cmp .cc{border-radius:16px;padding:22px 24px}
+.cmp .de-c{background:var(--card);border:1px solid var(--stone)}
+.cmp .zh-c{background:var(--manilla)}
+.cmp .tag{font-family:var(--sans);font-size:10px;letter-spacing:.14em;font-weight:700;display:block;margin-bottom:10px}
+.cmp .de-c .tag{color:var(--clay)}
+.cmp .zh-c .tag{color:var(--cloud-d)}
+.cmp .ex{font-size:14.5px;font-style:italic;margin:6px 0}
+.cmp .ex small{font-family:var(--sans);font-style:normal;font-size:11px;color:var(--cloud-d);margin-left:8px}
+.cmp p{font-size:12.5px;color:var(--ink)}
+.samebar{margin-top:16px;background:var(--oat);border-radius:12px;padding:12px 18px;font-size:13px;text-align:center}
+.samebar b{color:var(--clay)}
+/* ---------- note & footer ---------- */
+.note{margin:26px 0 8px;background:var(--manilla);border-radius:14px;padding:18px 22px}
+.note .tag{font-family:var(--sans);font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:700;display:block;margin-bottom:8px}
+.note p{font-size:13.5px;line-height:1.7}
+footer{border-top:1px solid var(--stone);margin-top:48px;padding:26px 0 44px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:10.5px;color:var(--cloud-d);letter-spacing:.08em}
+footer a{color:var(--clay);text-decoration:none}
+.fade{opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+.fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wrap">
+    <div class="brand">Onomatopoesie · Visualisierung <b>05 / 08</b></div>
+    <div class="links">
+      <a href="viz00_index.html">索引</a>
+      <a href="viz01_bouba-kiki.html">01 象似性</a>
+      <a href="viz02_crossmodal.html">02 跨模态</a>
+      <a href="viz03_artikulation.html">03 具身发音</a>
+      <a href="viz04_mentales-lexikon.html">04 心理词典</a>
+      <a class="on" href="viz05_reifikation.html">05 物化</a>
+      <a href="viz06_metapher.html">06 隐喻</a>
+      <a href="viz07_interjektion.html">07 感叹词习得</a>
+      <a href="viz08_didaktik.html">08 教学</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Visualisierung 05 · Grammatikalisierung &amp; Reifikation · 词法化与物化</div>
+    <h1>把「一件事」打包成「一个东西」
+      <span class="de">bellen → Ge- 前缀 → das Gebelle —— 事件如何变成实体</span>
+    </h1>
+    <p class="lead">Hopper &amp; Traugott (2003) 所说的物化（Reifikation）：一个动态事件经语法手段「打包」为可谈论、可量化、可话题化的抽象实体。德语用 <em>Ge- 前缀</em>或<em>首字母大写</em>完成这次跃迁——点击播放，看 <i>bellen</i> 如何一步步变成 <i>das Gebelle</i>。</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ A. 三段流程动画 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">A</div><div class="sec-title">物化流水线：bellen → das Gebelle<span class="de">REIFIKATIONS-PIPELINE · 可播放</span></div></div>
+  <div class="card">
+    <div class="pipe">
+      <div class="stage" id="st0">
+        <div class="cat">VERB · 动态事件</div>
+        <div class="big">bellen</div>
+        <div class="pos">动词 · 进行中的事件</div>
+        <div class="ds">狗正在叫——一个发生在时间里的动作，说完就消散</div>
+      </div>
+      <div class="p-arr" id="ar0">
+        <span class="glyph">Ge-</span>
+        <span class="lab">反复 · 持续<br>集合 KOLLEKTIV-<br>BILDUNG「打包」</span>
+      </div>
+      <div class="stage" id="st1">
+        <div class="cat">AFFIX · 语法操作</div>
+        <div class="big">Ge-belle</div>
+        <div class="pos">Ge- 前缀 · 集合化</div>
+        <div class="ds">无数次「叫」被收集、叠加、封装成一个整体</div>
+      </div>
+      <div class="p-arr" id="ar1">
+        <span class="glyph">→</span>
+        <span class="lab">名词化<br>NOMINALISIERUNG<br>+ 首字母大写</span>
+      </div>
+      <div class="stage" id="st2">
+        <div class="cat">NOMEN · 抽象实体</div>
+        <div class="big">das Gebelle</div>
+        <div class="pos">中性名词 · 可被谈论的「物」</div>
+        <div class="ds">事件变成实体：可量化、可评价、可作话题</div>
+      </div>
+    </div>
+    <div class="playrow">
+      <button class="playbtn" id="playBtn">▶ 播放物化过程 · Reifikation abspielen</button>
+      <button class="playbtn ghost" id="allBtn">全部显示</button>
+    </div>
+    <div class="pipe-note" id="pipeNote">准备好后点击播放——三步各停 1.2 秒。</div>
+  </div>
+</section>
+
+<!-- ============ B. Ge- 词族 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">B</div><div class="sec-title">Ge- 词族：打包出来的一整类「物」<span class="de">KOLLEKTIVBILDUNG · 常带贬义</span></div></div>
+  <div class="chipbox">
+    <div class="chipc">
+      <div class="w">das Gebelle</div><div class="g">← bellen 吠叫</div>
+      <div class="d">不停的吠叫——强调持续与恼人</div>
+      <span class="pej"><b>−</b> pejorativ 贬义</span>
+    </div>
+    <div class="chipc">
+      <div class="w">das Geflüster</div><div class="g">← flüstern 耳语</div>
+      <div class="d">不断的窃窃私语——背后议论的意味</div>
+      <span class="pej"><b>−</b> pejorativ 贬义</span>
+    </div>
+    <div class="chipc">
+      <div class="w">das Gejammer</div><div class="g">← jammern 哀叹</div>
+      <div class="d">抱怨连天——令人厌烦的哭诉</div>
+      <span class="pej"><b>−</b> pejorativ 贬义</span>
+    </div>
+    <div class="chipc">
+      <div class="w">das Gerede</div><div class="g">← reden 说话</div>
+      <div class="d">闲言碎语——无根据的谈论</div>
+      <span class="pej"><b>−</b> pejorativ 贬义</span>
+    </div>
+  </div>
+  <p style="font-size:12.5px;color:var(--cloud-d);margin-top:14px">规律：Ge- + 动词词干 → 中性集合名词，表达「反复发生的一整团事件」，且几乎总是滑向负面评价（pejorative Konnotation）——物化不仅是语法操作，也是态度的编码。</p>
+</section>
+
+<!-- ============ C. 直接大写 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">C</div><div class="sec-title">另一条捷径：拟声词直接大写<span class="de">DIREKTE NOMINALISIERUNG · 教材图 5</span></div></div>
+  <div class="caps">
+    <div class="cap"><div class="w">der Krach</div><div class="d">krach! → 巨响 / 破裂声 —— 也可指「吵架」</div></div>
+    <div class="cap"><div class="w">der Knall</div><div class="d">knall! → 砰然巨响 / 爆炸声</div></div>
+    <div class="cap"><div class="w">der Puff</div><div class="d">puff! → 噗的一声 / 轻爆响</div></div>
+  </div>
+  <p style="font-size:12.5px;color:var(--cloud-d);margin-top:14px">拟声词无需任何词缀，仅经<b>首字母大写 + 冠词</b>即完成名词化——声音被「原样封存」为一个词，这是德语拼写系统为物化开的后门。</p>
+</section>
+
+<!-- ============ D. 汉德对比 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">D</div><div class="sec-title">汉德对比：两种语言，同一次跃迁<span class="de">DEUTSCH – CHINESISCH IM VERGLEICH</span></div></div>
+  <div class="cmp">
+    <div class="cc de-c">
+      <span class="tag">🇩🇪 DEUTSCH · 形态手段</span>
+      <div class="ex">bellen → das Gebelle<small>Ge- 前缀集合化</small></div>
+      <div class="ex">krach! → der Krach<small>首字母大写名词化</small></div>
+      <div class="ex">flüstern → das Geflüster<small>词缀 + 大写双管齐下</small></div>
+      <p style="margin-top:10px">德语用<b>可见的词形变化</b>（词缀、大写、冠词）标记「事件 → 物」的语法身份转换。</p>
+    </div>
+    <div class="cc zh-c">
+      <span class="tag">🇨🇳 汉语 · 词汇手段</span>
+      <div class="ex">叫 → 叫声<small>加「声」字</small></div>
+      <div class="ex">哭 → 哭声 / 嚎哭<small>复合构词</small></div>
+      <div class="ex">滴答 → 滴答声<small>拟声 + 类名</small></div>
+      <p style="margin-top:10px">汉语缺乏词形变化，靠<b>加类名「声 / 音」或复合</b>完成同样的封装——手段不同，目标一致。</p>
+    </div>
+  </div>
+  <div class="samebar">共同的认知本质：<b>EVENT → OBJECT</b> 的抽象化跃迁 —— 人类把流动的经验切成可以拿在手里端详的「东西」</div>
+</section>
+
+<!-- ============ 讲者提示 ============ -->
+<div class="note">
+  <span class="tag">SPRECHNOTIZ · 讲者提示（对应汇报 4:10–5:10 · 第 7 页幻灯）</span>
+  <p>Hopper &amp; Traugott (2003) 的语法化理论可以解释这个现象：bellen 是一个动态事件，加上 Ge- 前缀（表示反复、持续、集合），再经名词化首字母大写，就成了 das Gebelle——「不停的吠叫」这个抽象实体。同样的还有 Geflüster、Gejammer、Gerede，常带贬义。拟声词更省事：Krach、Knall、Puff 直接大写就是名词（教材图 5）。汉语则用加「声」字的方式（叫→叫声）完成同样的跃迁。物化的本质，是 Event → Object 的抽象化。</p>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>拟声词 · ONOMATOPOESIE —— 破译大脑的声音密码 ｜ 《现代德语词汇学》第五章第一节 · 学术课题小汇报</span>
+    <span><a href="viz04_mentales-lexikon.html">← 04 心理词典</a> ｜ <a href="viz00_index.html">索引</a> ｜ 下一页：<a href="viz06_metapher.html">06 隐喻 →</a></span>
+  </div>
+</footer>
+
+<script>
+const stages=['st0','st1','st2'],arrs=['ar0','ar1'];
+const note=document.getElementById('pipeNote');
+let timer=null;
+function reset(){
+  stages.forEach(id=>document.getElementById(id).classList.remove('on'));
+  arrs.forEach(id=>document.getElementById(id).classList.remove('on'));
+}
+function showAll(msg){
+  reset();
+  stages.forEach(id=>document.getElementById(id).classList.add('on'));
+  arrs.forEach(id=>document.getElementById(id).classList.add('on'));
+  if(msg)note.textContent=msg;
+}
+function play(){
+  if(timer)clearInterval(timer);
+  reset();
+  note.textContent='① 一个动态事件：狗正在叫……';
+  const seq=[
+    ()=>{document.getElementById('st0').classList.add('on');note.textContent='① 一个动态事件：狗正在叫……';},
+    ()=>{document.getElementById('ar0').classList.add('on');note.textContent='② Ge- 前缀开始「打包」：反复、持续、集合……';},
+    ()=>{document.getElementById('st1').classList.add('on');note.textContent='② 无数次吠叫被叠加封装为一个整体。';},
+    ()=>{document.getElementById('ar1').classList.add('on');note.textContent='③ 名词化：加冠词 das，首字母大写……';},
+    ()=>{document.getElementById('st2').classList.add('on');note.textContent='③ 完成！das Gebelle —— 事件已成为可谈论、可量化的「物」。';timer=null;}
+  ];
+  let i=0;seq[i++]();
+  timer=setInterval(()=>{if(i<seq.length)seq[i++]();else clearInterval(timer);},1200);
+}
+document.getElementById('playBtn').addEventListener('click',play);
+document.getElementById('allBtn').addEventListener('click',()=>{if(timer)clearInterval(timer);showAll('完整流水线：bellen → Ge-belle → das Gebelle');});
+/* fade-in */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('section,.note').forEach(el=>{el.classList.add('fade');io.observe(el);});
+</script>
+</body>
+</html>

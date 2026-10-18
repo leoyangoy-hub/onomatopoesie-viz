@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可视化 07 · 感叹词与儿童习得 — 拟声词 Onomatopoesie</title>
+<style>
+:root{
+  --ink:#141413; --canvas:#f0eee6; --card:#faf9f5; --cloud:#b0aea5; --cloud-d:#87867f;
+  --stone:#cccbc8; --oat:#e3dacc; --manilla:#f5e3c7; --clay:#c6613f; --clay-2:#d97757;
+  --serif:Georgia,"Times New Roman","Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --sans:"Inter","PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SF Mono",Consolas,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--canvas);color:var(--ink);font-family:var(--serif);line-height:1.65;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+.topnav{position:sticky;top:0;z-index:100;background:rgba(240,238,230,.93);backdrop-filter:blur(8px);border-bottom:1px solid var(--stone)}
+.topnav .wrap{display:flex;justify-content:space-between;align-items:center;min-height:56px;gap:14px;padding-top:6px;padding-bottom:6px;flex-wrap:wrap}
+.brand{font-family:var(--sans);font-size:11px;letter-spacing:.14em;color:var(--cloud-d);font-weight:600;text-transform:uppercase}
+.brand b{color:var(--clay);font-weight:700}
+.links{display:flex;gap:3px;flex-wrap:wrap}
+.links a{font-family:var(--sans);font-size:11px;color:var(--cloud-d);text-decoration:none;padding:4px 9px;border-radius:999px;white-space:nowrap}
+.links a:hover{color:var(--ink);background:var(--oat)}
+.links a.on{background:var(--ink);color:var(--card)}
+.hero{padding:58px 0 30px;border-bottom:1px solid var(--stone)}
+.kicker{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--clay)}
+.hero h1{font-size:46px;font-weight:400;line-height:1.12;margin:16px 0 6px}
+.hero h1 .de{display:block;font-size:22px;color:var(--cloud-d);margin-top:8px;font-weight:400}
+.lead{font-size:16px;max-width:80ch;margin-top:16px}
+.lead em{font-style:normal;color:var(--clay);font-weight:600}
+section{padding:34px 0 6px}
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:18px;border-bottom:1px solid var(--stone);padding-bottom:10px}
+.sec-num{font-size:26px;color:var(--cloud)}
+.sec-title{font-size:22px;font-weight:700}
+.sec-title .de{font-family:var(--sans);font-size:12px;color:var(--cloud-d);font-weight:500;margin-left:10px;letter-spacing:.06em}
+.card{background:var(--card);border:1px solid var(--stone);border-radius:16px;padding:24px 26px}
+h3.ct{font-size:17px;font-weight:700}
+h3.ct .de{font-family:var(--sans);font-size:11.5px;color:var(--cloud-d);font-weight:500;margin-left:8px;font-style:italic}
+.card p{font-size:13.5px;margin-top:10px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:860px){.grid-2{grid-template-columns:1fr}}
+/* ---------- tabs ---------- */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tab{font-family:var(--sans);font-size:12px;font-weight:700;border:1px solid var(--stone);background:var(--card);color:var(--cloud-d);
+  border-radius:999px;padding:9px 20px;cursor:pointer;transition:all .25s}
+.tab small{display:block;font-size:9px;font-weight:600;letter-spacing:.1em;margin-top:1px}
+.tab:hover{border-color:var(--ink);color:var(--ink)}
+.tab.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.tab.on small{color:var(--cloud)}
+.panel{display:none}
+.panel.on{display:block;animation:pin .4s cubic-bezier(.2,.7,.2,1)}
+@keyframes pin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* ---------- symbol game ---------- */
+.symflow{display:grid;grid-template-columns:1fr 60px 1fr 60px 1fr;gap:0;align-items:stretch;margin-top:14px}
+@media(max-width:860px){.symflow{grid-template-columns:1fr}.symflow .sa{transform:rotate(90deg);height:40px}}
+.symflow .sb{background:var(--canvas);border:1px solid var(--stone);border-radius:12px;padding:14px 16px;text-align:center}
+.symflow .sb .t{font-size:14px;font-weight:700}
+.symflow .sb .d{font-size:11.5px;color:var(--cloud-d);margin-top:4px}
+.symflow .sa{display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--clay)}
+.exgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px}
+@media(max-width:640px){.exgrid{grid-template-columns:1fr}}
+.ex{background:var(--manilla);border-radius:12px;padding:14px 18px}
+.ex .w{font-size:17px;font-weight:700;font-style:italic}
+.ex .d{font-size:12px;margin-top:4px}
+/* ---------- limbic ---------- */
+.limb{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center}
+@media(max-width:860px){.limb{grid-template-columns:1fr}}
+.limb svg{width:100%;height:auto;display:block}
+.bl-lab{font-family:var(--sans);font-size:10px;fill:var(--cloud-d)}
+.bl-lab b{fill:var(--ink)}
+.amy{fill:var(--clay);opacity:.9;animation:amy 2.2s ease-in-out infinite}
+@keyframes amy{0%,100%{opacity:.9}50%{opacity:.45}}
+.signal{fill:none;stroke:var(--clay);stroke-width:2.4;stroke-dasharray:5 5;animation:sig 1.2s linear infinite}
+@keyframes sig{to{stroke-dashoffset:-10}}
+.ichips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.ichip{font-size:17px;font-weight:700;font-style:italic;background:var(--oat);border-radius:10px;padding:7px 16px}
+.ichip small{font-family:var(--sans);font-style:normal;font-size:10px;color:var(--cloud-d);margin-left:7px}
+/* ---------- vom laut zum begriff ---------- */
+.jump{display:grid;grid-template-columns:1fr 70px 1fr;gap:14px;align-items:stretch;margin-top:14px}
+@media(max-width:860px){.jump{grid-template-columns:1fr}.jump .ja{transform:rotate(90deg);height:48px}}
+.jcol h4{font-family:var(--sans);font-size:10.5px;letter-spacing:.14em;color:var(--cloud-d);font-weight:700;margin-bottom:10px}
+.jrow{display:flex;align-items:center;gap:10px;background:var(--canvas);border:1px solid var(--stone);border-radius:10px;padding:8px 14px;margin-bottom:8px;font-size:13.5px}
+.jrow .s{font-style:italic;font-weight:700;color:var(--clay);min-width:88px}
+.jrow .arrow{color:var(--cloud);font-family:var(--sans)}
+.ja{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.ja .g{font-size:28px;color:var(--clay);font-weight:700;font-family:var(--sans)}
+.ja .l{font-family:var(--sans);font-size:9px;letter-spacing:.1em;color:var(--cloud-d);font-weight:700;text-align:center}
+.jcol.dark h4{color:var(--clay)}
+.jcol .jrow.hl{background:var(--manilla);border-color:var(--clay)}
+.jcol .jrow.hl .n{font-weight:700}
+/* ---------- acquisition timeline ---------- */
+.tl{position:relative;margin-top:10px;padding-left:26px}
+.tl:before{content:"";position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--stone)}
+.tl-item{position:relative;padding:0 0 22px 16px}
+.tl-item:before{content:"";position:absolute;left:-25px;top:6px;width:12px;height:12px;border-radius:50%;background:var(--card);border:3px solid var(--clay)}
+.tl-item .yr{font-family:var(--sans);font-size:11px;font-weight:700;color:var(--clay);letter-spacing:.06em}
+.tl-item .tt{font-size:15px;font-weight:700;margin:2px 0}
+.tl-item .ds{font-size:12.5px;max-width:92ch}
+/* ---------- note & footer ---------- */
+.note{margin:26px 0 8px;background:var(--manilla);border-radius:14px;padding:18px 22px}
+.note .tag{font-family:var(--sans);font-size:10px;letter-spacing:.14em;color:var(--clay);font-weight:700;display:block;margin-bottom:8px}
+.note p{font-size:13.5px;line-height:1.7}
+footer{border-top:1px solid var(--stone);margin-top:48px;padding:26px 0 44px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-family:var(--sans);font-size:10.5px;color:var(--cloud-d);letter-spacing:.08em}
+footer a{color:var(--clay);text-decoration:none}
+.fade{opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)}
+.fade.in{opacity:1;transform:none}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="wrap">
+    <div class="brand">Onomatopoesie · Visualisierung <b>07 / 08</b></div>
+    <div class="links">
+      <a href="viz00_index.html">索引</a>
+      <a href="viz01_bouba-kiki.html">01 象似性</a>
+      <a href="viz02_crossmodal.html">02 跨模态</a>
+      <a href="viz03_artikulation.html">03 具身发音</a>
+      <a href="viz04_mentales-lexikon.html">04 心理词典</a>
+      <a href="viz05_reifikation.html">05 物化</a>
+      <a href="viz06_metapher.html">06 隐喻</a>
+      <a class="on" href="viz07_interjektion.html">07 感叹词习得</a>
+      <a href="viz08_didaktik.html">08 教学</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="kicker">Visualisierung 07 · Interjektionen &amp; Spracherwerb · 感叹词与儿童习得</div>
+    <h1>最早学会的词，最原始的信号
+      <span class="de">为什么 Wauwau 是人生的第一批词？为什么 Ach! 拦不住？</span>
+    </h1>
+    <p class="lead">拟声词与感叹词位于语言的<em>两个端点</em>：一端是儿童进入符号世界的门（Piaget 的符号游戏），一端是情绪通路的泄压阀（边缘系统的反射性输出）。切换三个模块，看清这条从声音到概念的完整通路。</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ A. 三模块 tabs ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">A</div><div class="sec-title">三个模块：门 · 阀 · 桥<span class="de">DREI MODULE · 点击切换</span></div></div>
+
+  <div class="tabs">
+    <button class="tab on" data-t="p1">① 符号游戏<small>SYMBOLSPIEL · PIAGET</small></button>
+    <button class="tab" data-t="p2">② 边缘系统<small>LIMBISCHES SYSTEM</small></button>
+    <button class="tab" data-t="p3">③ 从声音到概念<small>VOM LAUT ZUM BEGRIFF</small></button>
+  </div>
+
+  <!-- Panel 1: Symbolspiel -->
+  <div class="panel on" id="p1">
+    <div class="card">
+      <h3 class="ct">符号游戏：不会语法，先会「扮演」<span class="de">Piaget · 前运算阶段</span></h3>
+      <p>Piaget 观察到：前运算阶段的儿童尚不能驾驭复杂语法，却已能用<b>语音对应实物</b>——这就是符号游戏（Symbolspiel）。拟声词是认知经济性极高的符号：声音本身就是意义的「说明书」，无需额外翻译。<i>Wauwau</i> 因此成为人生最早掌握的词之一。</p>
+      <div class="symflow">
+        <div class="sb"><div class="t">真实声音</div><div class="d">狗「汪汪」叫</div></div>
+        <div class="sa">→</div>
+        <div class="sb"><div class="t">语音模仿</div><div class="d">孩子说 „wau wau“</div></div>
+        <div class="sa">→</div>
+        <div class="sb"><div class="t">符号固化</div><div class="d">„Wauwau“ = 狗本身</div></div>
+      </div>
+      <div class="exgrid">
+        <div class="ex"><div class="w">das Pingpong</div><div class="d">乒乓球——拟声直接转为事物名：声音即名称，零翻译成本</div></div>
+        <div class="ex"><div class="w">der Uhu</div><div class="d">雕鸮——猫头鹰的叫声 „uhu“ 直接成为这种鸟的名字</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 2: Limbisches System -->
+  <div class="panel" id="p2">
+    <div class="card">
+      <h3 class="ct">感叹词：情绪通路的「泄压阀」<span class="de">Limbisches System · Amygdala</span></h3>
+      <div class="limb">
+        <div>
+          <p><i>Ach!</i>、<i>Au!</i> 这类感叹词是<b>大脑受刺激时最直接的生理反应</b>：刺激抵达边缘系统（limbisches System），杏仁核（Amygdala）处理情绪与痛觉，不等皮层「想好措辞」就已反射性输出——感叹词因此是<b>最原始的语言信号</b>，几乎不可抑制。</p>
+          <div class="ichips">
+            <span class="ichip">Ach!<small>感叹 · 惊喜/惋惜</small></span>
+            <span class="ichip">Au!<small>疼痛的即时反射</small></span>
+            <span class="ichip">Oh!<small>惊讶</small></span>
+            <span class="ichip">Pfui!<small>嫌恶</small></span>
+          </div>
+        </div>
+        <svg viewBox="0 0 380 240">
+          <!-- simplified brain -->
+          <path d="M60,120 C60,60 130,30 200,32 C280,34 330,76 330,130 C330,180 280,210 200,212 C120,214 60,180 60,120 Z"
+                fill="#e3dacc" stroke="#141413" stroke-width="2"/>
+          <!-- amygdala -->
+          <ellipse class="amy" cx="215" cy="150" rx="26" ry="18"/>
+          <!-- cortex highlight -->
+          <path d="M95,95 C120,62 180,52 230,58" fill="none" stroke="#b0aea5" stroke-width="2" stroke-dasharray="4 4"/>
+          <!-- stimulus arrow -->
+          <path class="signal" d="M20,150 L180,150"/>
+          <path d="M180,150 l-8,-5 M180,150 l-8,5" stroke="#c6613f" stroke-width="2.4" fill="none"/>
+          <!-- output arrow -->
+          <path class="signal" d="M235,132 C280,110 320,90 360,70"/>
+          <text class="bl-lab" x="16" y="140"><tspan font-weight="700">刺激 Reiz</tspan></text>
+          <text class="bl-lab" x="196" y="158"><tspan font-weight="700" fill="#c6613f">杏仁核</tspan></text>
+          <text class="bl-lab" x="196" y="170"><tspan>Amygdala</tspan></text>
+          <text class="bl-lab" x="88" y="80"><tspan>皮层 Kortex（还来不及措辞）</tspan></text>
+          <text class="bl-lab" x="300" y="60"><tspan font-weight="700" fill="#c6613f">„Au!“</tspan></text>
+          <text class="bl-lab" x="290" y="200"><tspan>反射性输出 · 快于意识</tspan></text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Panel 3: Vom Laut zum Begriff -->
+  <div class="panel" id="p3">
+    <div class="card">
+      <h3 class="ct">从声音到概念：一次认知跃迁<span class="de">Vom Laut zum Begriff</span></h3>
+      <p>感叹词与拟声词沿两条支流汇入词汇系统：<b>动物</b>的叫声与<b>物体</b>的声响，各自先以感叹/模仿形式存在，再经首字母大写名词化——声音完成了到概念的认知跃迁（参见可视化 05 物化）。</p>
+      <div class="jump">
+        <div class="jcol">
+          <h4>TIERE · 动物之声</h4>
+          <div class="jrow"><span class="s">gack!</span><span class="arrow">母鸡下蛋的报信声</span></div>
+          <div class="jrow"><span class="s">iah!</span><span class="arrow">驴叫</span></div>
+          <div class="jrow"><span class="s">kikeriki!</span><span class="arrow">公鸡啼鸣</span></div>
+          <h4 style="margin-top:14px">DINGE · 物体之声</h4>
+          <div class="jrow"><span class="s">bimbam</span><span class="arrow">钟声</span></div>
+          <div class="jrow"><span class="s">krach</span><span class="arrow">碎裂巨响</span></div>
+          <div class="jrow"><span class="s">tick tack</span><span class="arrow">钟表滴答</span></div>
+        </div>
+        <div class="ja">
+          <span class="g">Aa→</span>
+          <span class="l">大写名词化<br>NOMINALISIERUNG<br>认知跃迁</span>
+        </div>
+        <div class="jcol dark">
+          <h4>NOMEN · 概念之名</h4>
+          <div class="jrow hl"><span class="n">der Krach</span><span class="arrow">巨响；引申为「吵架」</span></div>
+          <div class="jrow hl"><span class="n">der Patsch</span><span class="arrow">拍打声；ein Patsch = 一记拍打</span></div>
+          <div class="jrow hl"><span class="n">das Ticken</span><span class="arrow">滴答声（可量化、可描写）</span></div>
+          <p style="font-size:12px;color:var(--cloud-d);margin-top:12px">名词化之后，声音可以被<b>谈论、计数、比较、写入句子</b>——它从耳边的振动，变成了手里的概念。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ B. 习得时间线 ============ -->
+<section>
+  <div class="sec-head"><div class="sec-num">B</div><div class="sec-title">儿童语言习得时间线：拟声词的位置<span class="de">SPRACHERWERB · ZEITLEISTE</span></div></div>
+  <div class="card">
+    <div class="tl">
+      <div class="tl-item">
+        <div class="yr">0–6 MONATE · 咿呀期</div>
+        <div class="tt">Lallen · 声音实验</div>
+        <div class="ds">婴儿自发产出各种音节，为世界储备「声音素材」——拟声能力是出厂配置。</div>
+      </div>
+      <div class="tl-item">
+        <div class="yr">CA. 12 MONATE · 第一批词</div>
+        <div class="tt">Wauwau · Miau · Bimbam</div>
+        <div class="ds">拟声词跻身人生第一批词汇：声音与所指天然粘连，认知经济性最高，习得门槛最低。</div>
+      </div>
+      <div class="tl-item">
+        <div class="yr">2–4 JAHRE · 符号游戏</div>
+        <div class="tt">Symbolspiel · Piaget</div>
+        <div class="ds">前运算阶段：不会复杂语法，但能用语音对应实物——拟声词成为符号功能的训练场。</div>
+      </div>
+      <div class="tl-item">
+        <div class="yr">SPÄTER · 隐喻扩展</div>
+        <div class="tt">Vom Tierlaut zum Menschen</div>
+        <div class="ds">随着概念系统成熟，童年的 „brummen“ 扩展出「人嘟囔」「引擎低鸣」等隐喻用法（见可视化 06）——最早的词，长出最远的枝。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 讲者提示 ============ -->
+<div class="note">
+  <span class="tag">SPRECHNOTIZ · 讲者提示（对应汇报 8:10–9:00 · 第 9 页幻灯）</span>
+  <p>从习得角度看，拟声词是儿童进入符号世界的门。Piaget 的符号游戏（Symbolspiel）指出，前运算阶段的儿童尚不会复杂语法，却能用语音对应实物——Wauwau 因此是人生最早的词之一。感叹词如 Ach!、Au! 则通往另一端：它们是大脑边缘系统（limbisches System）受刺激时最直接的生理反应，杏仁核（Amygdala）处理情绪痛觉，反射性输出，是最原始的语言信号。最后，动物之声（gack! · iah! · kikeriki!）与物体之声（bimbam · krach · tick tack）经名词化（Krach · Patsch 直接大写）完成从声音到概念的认知跃迁。</p>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>拟声词 · ONOMATOPOESIE —— 破译大脑的声音密码 ｜ 《现代德语词汇学》第五章第一节 · 学术课题小汇报</span>
+    <span><a href="viz06_metapher.html">← 06 隐喻</a> ｜ <a href="viz00_index.html">索引</a> ｜ 下一页：<a href="viz08_didaktik.html">08 教学 →</a></span>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+    document.getElementById(t.dataset.t).classList.add('on');
+  });
+});
+/* fade-in */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}}),{threshold:.12});
+document.querySelectorAll('section,.note').forEach(el=>{el.classList.add('fade');io.observe(el);});
+</script>
+</body>
+</html>
